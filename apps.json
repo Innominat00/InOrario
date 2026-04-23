@@ -1,0 +1,28 @@
+{
+"name": "In Orario? Repo",
+"identifier": "com.cario.in-orario-source",
+"subtitle": "Utility Treni per Magenta e dintorni",
+"description": "La mia repository personale per tenere sempre aggiornata l'app In Orario?.",
+"iconURL": "https://raw.githubusercontent.com/Innominat00/InOrario/main/icon.png",
+"apps": [
+{
+"name": "In Orario?",
+"bundleIdentifier": "cario.In-Orario",
+"developerName": "Carlo Porta",
+"version": "1.0.0",
+"versionDate": "2026-04-24T00:00:00Z",
+"versionDescription": "Release stabile con fix connessione e dashboard personalizzabile.",
+"downloadURL": "https://github.com/Innominat00/InOrario/raw/main/InOrario.ipa",
+"localizedDescription": "Monitor dei treni live per Magenta, Rho Fiera e Milano. Salva i tuoi treni preferiti e riordina la dashboard come preferisci.",
+"iconURL": "https://raw.githubusercontent.com/Innominat00/InOrario/main/icon.png",
+"tintColor": "#007AFF",
+"size": 5242880,
+"permissions": [
+{
+"type": "location",
+"usageDescription": "Serve per mostrare automaticamente la stazione ferroviaria più vicina a te."
+}
+]
+}
+]
+}
