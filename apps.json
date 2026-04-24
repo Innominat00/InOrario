@@ -2,7 +2,6 @@
   "name": "In Orario? Repo",
   "identifier": "com.cario.in-orario-source",
   "subtitle": "Utility Treni per Magenta e dintorni",
-  "description": "Repository personale per l'app In Orario?.",
   "iconURL": "https://raw.githubusercontent.com/Innominat00/InOrario/main/icon.png",
   "apps": [
     {
@@ -11,7 +10,7 @@
       "developerName": "Carlo Porta",
       "version": "1.0.0",
       "versionDate": "2026-04-24T00:00:00Z",
-      "versionDescription": "Release stabile con tabelloni RFI.",
+      "versionDescription": "Release sperimentale con tabelloni RFI.",
       "downloadURL": "https://github.com/Innominat00/InOrario/releases/download/v1.0.0/InOrario.ipa",
       "localizedDescription": "Monitor dei treni live per Magenta, Rho Fiera e Milano.",
       "iconURL": "https://raw.githubusercontent.com/Innominat00/InOrario/main/icon.png",
