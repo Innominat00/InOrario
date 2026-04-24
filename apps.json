@@ -6,7 +6,7 @@
   "apps": [
     {
       "name": "In Orario?",
-      "bundleIdentifier": "cario.In-Orario",
+      "bundleIdentifier": "carlo.In-Orario",
       "developerName": "Carlo Porta",
       "version": "1.0.0",
       "versionDate": "2026-04-24T00:00:00Z",
