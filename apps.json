@@ -1,12 +1,12 @@
 {
   "name": "In Orario? Repo",
-  "identifier": "com.cario.in-orario-source",
+  "identifier": "com.Carlo.InOrario-source",
   "subtitle": "Utility Treni per Magenta e dintorni",
   "iconURL": "https://raw.githubusercontent.com/Innominat00/InOrario/main/icon.png",
   "apps": [
     {
       "name": "In Orario?",
-      "bundleIdentifier": "carlo.In-Orario",
+      "bundleIdentifier": "carlo.InOrario",
       "developerName": "Carlo Porta",
       "version": "1.0.0",
       "versionDate": "2026-04-24T00:00:00Z",
