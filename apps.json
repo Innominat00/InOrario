@@ -19,7 +19,7 @@
       "permissions": [
         {
           "type": "location",
-          "usageDescription": "L'app usa la tua posizione per trovare la stazione più vicina."
+          "usageDescription": "NSLocationWhenInUseUsageDescription"
         }
       ]
     }
