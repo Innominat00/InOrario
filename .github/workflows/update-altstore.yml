@@ -1,0 +1,63 @@
+```yaml
+name: Update AltStore Source
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Serve per permettere al robot di salvare le modifiche
+    
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Aggiornamento del file apps.json
+        run: |
+          # Recuperiamo la versione dal TAG della release (es. 1.1 o v1.1)
+          # E costruiamo l'URL del file IPA caricato negli asset
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          VERSION=${TAG_NAME//v/} # Rimuove la 'v' se presente
+          REPO_NAME="${{ github.repository }}"
+          
+          # NOTA: Assicurati che il file caricato nella release si chiami esattamente InOrario.ipa
+          # Se lo chiami diversamente, cambia il nome qui sotto.
+          DOWNLOAD_URL="https://github.com/${REPO_NAME}/releases/download/${TAG_NAME}/InOrario.ipa"
+          
+          python3 -c "
+          import json
+          import os
+
+          file_path = 'apps.json'
+          
+          # Carichiamo il file attuale
+          with open(file_path, 'r') as f:
+              data = json.load(f)
+          
+          # Aggiorniamo la versione e il link del primo elemento della lista 'apps'
+          # Se hai più app nel JSON, dovremo puntare all'indice corretto
+          if 'apps' in data and len(data['apps']) > 0:
+              data['apps'][0]['version'] = '$VERSION'
+              data['apps'][0]['downloadURL'] = '$DOWNLOAD_URL'
+              print(f'Aggiornato apps.json alla versione {VERSION}')
+          else:
+              print('Errore: Struttura apps.json non valida o lista apps vuota')
+              exit(1)
+              
+          # Salviamo le modifiche
+          with open(file_path, 'w') as f:
+              json.dump(data, f, indent=2)
+          "
+
+      - name: Commit e Push delle modifiche
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add apps.json
+          git commit -m "Auto-update apps.json to version ${{ github.event.release.tag_name }} [skip ci]"
+          git push
+
+```
