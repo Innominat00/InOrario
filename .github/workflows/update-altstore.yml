@@ -1,37 +1,57 @@
 name: Update AltStore Source
+
 on:
   release:
     types: [published]
+  workflow_dispatch: # Permette l'avvio manuale dalla scheda Actions
 
 jobs:
   update-json:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Update JSON version
         run: |
-          # Questo script usa 'jq' per cambiare la versione nel file apps.json
-          # Prende il numero della versione dal tag della release (es. v1.2)
-          VERSION=${{ github.event.release.tag_name }}
-          URL="[https://github.com/$](https://github.com/$){{ github.repository }}/releases/download/${VERSION}/InOrario.ipa"
+          # Recupera la versione dal tag della release o usa un default se forzato a mano
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          if [ -z "$TAG_NAME" ]; then TAG_NAME="v1.1"; fi # Fallback per test manuali
           
-          # Comando per aggiornare il file (richiede che tu abbia jq configurato o usi python)
+          VERSION=${TAG_NAME//v/}
+          REPO_NAME="${{ github.repository }}"
+          URL="[https://github.com/$](https://github.com/$){REPO_NAME}/releases/download/${TAG_NAME}/InOrario.ipa"
+          
           python3 -c "
           import json
-          with open('apps.json', 'r') as f:
+          import os
+
+          file_path = 'apps.json'
+          if not os.path.exists(file_path):
+              print('Errore: apps.json non trovato')
+              exit(1)
+
+          with open(file_path, 'r') as f:
               data = json.load(f)
-          data['apps'][0]['version'] = '$VERSION'.replace('v', '')
-          data['apps'][0]['downloadURL'] = '$URL'
-          with open('apps.json', 'w') as f:
+          
+          if 'apps' in data and len(data['apps']) > 0:
+              data['apps'][0]['version'] = '$VERSION'
+              data['apps'][0]['downloadURL'] = '$URL'
+              print(f'Aggiornato apps.json alla versione {VERSION}')
+          else:
+              print('Errore: Struttura JSON non valida')
+              exit(1)
+              
+          with open(file_path, 'w') as f:
               json.dump(data, f, indent=2)
           "
 
       - name: Commit and Push
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add apps.json
-          git commit -m "Auto-update apps.json to ${{ github.event.release.tag_name }}"
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update apps.json to version ${{ github.event.release.tag_name }}" && git push)
