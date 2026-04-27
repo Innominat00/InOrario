@@ -24,7 +24,7 @@ jobs:
           # Gestione versione: se lanciato a mano senza release, usa v1.1 come test
           FINAL_TAG=${TAG_NAME:-v1.1}
           CLEAN_VERSION=${FINAL_TAG//v/}
-          DOWNLOAD_URL="[https://github.com/$](https://github.com/$){REPO}/releases/download/${FINAL_TAG}/InOrario.ipa"
+          DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${FINAL_TAG}/InOrario.ipa"
           
           echo "Aggiorno a versione: $CLEAN_VERSION"
           echo "Link download: $DOWNLOAD_URL"
