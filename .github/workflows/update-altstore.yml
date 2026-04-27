@@ -16,33 +16,37 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Update JSON version
+        env:
+          # Passiamo le variabili in modo sicuro a Python
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
         run: |
-          # Recupera la versione dal tag della release o usa un default se forzato a mano
-          TAG_NAME="${{ github.event.release.tag_name }}"
-          if [ -z "$TAG_NAME" ]; then TAG_NAME="v1.1"; fi # Fallback per test manuali
+          # Gestione versione: se lanciato a mano senza release, usa v1.1 come test
+          FINAL_TAG=${TAG_NAME:-v1.1}
+          CLEAN_VERSION=${FINAL_TAG//v/}
+          DOWNLOAD_URL="[https://github.com/$](https://github.com/$){REPO}/releases/download/${FINAL_TAG}/InOrario.ipa"
           
-          VERSION=${TAG_NAME//v/}
-          REPO_NAME="${{ github.repository }}"
-          URL="[https://github.com/$](https://github.com/$){REPO_NAME}/releases/download/${TAG_NAME}/InOrario.ipa"
-          
-          python3 -c "
-          import json
-          import os
+          echo "Aggiorno a versione: $CLEAN_VERSION"
+          echo "Link download: $DOWNLOAD_URL"
 
+          python3 -c "
+          import json, os
+          
           file_path = 'apps.json'
           if not os.path.exists(file_path):
-              print('Errore: apps.json non trovato')
+              print('Errore: apps.json non trovato nella cartella principale')
               exit(1)
 
           with open(file_path, 'r') as f:
               data = json.load(f)
           
+          # Aggiorniamo i dati usando le variabili del terminale
           if 'apps' in data and len(data['apps']) > 0:
-              data['apps'][0]['version'] = '$VERSION'
-              data['apps'][0]['downloadURL'] = '$URL'
-              print(f'Aggiornato apps.json alla versione {VERSION}')
+              data['apps'][0]['version'] = '$CLEAN_VERSION'
+              data['apps'][0]['downloadURL'] = '$DOWNLOAD_URL'
+              print('Dati inseriti nel JSON con successo')
           else:
-              print('Errore: Struttura JSON non valida')
+              print('Errore: Struttura apps.json non valida')
               exit(1)
               
           with open(file_path, 'w') as f:
@@ -54,4 +58,4 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add apps.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update apps.json to version ${{ github.event.release.tag_name }}" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update apps.json version" && git push)
