@@ -3,35 +3,33 @@ name: Update AltStore Source
 on:
   release:
     types: [published]
-  workflow_dispatch: # Permette l'avvio manuale dalla scheda Actions
+  workflow_dispatch: 
 
 jobs:
   update-json:
     runs-on: ubuntu-latest
+    # Diamo esplicitamente i permessi di scrittura per apps.json
     permissions:
       contents: write
     
     steps:
-      - name: Checkout code
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: main # <-- FONDAMENTALE: Checkout del branch principale, non del tag!
-          # Se il tuo branch principale si chiama "master", scrivi "master" qui sopra
+          ref: main # Forza il checkout sul branch main
 
       - name: Update JSON version
         env:
           TAG_NAME: ${{ github.event.release.tag_name }}
           REPO: ${{ github.repository }}
         run: |
-          # Gestione versione: se lanciato a mano senza release, usa v1.1 come test
-          FINAL_TAG=${TAG_NAME:-v1.1}
+          # Fallback se avviato manualmente
+          FINAL_TAG=${TAG_NAME:-v1.4}
           CLEAN_VERSION=${FINAL_TAG//v/}
           DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${FINAL_TAG}/InOrario.ipa"
           
-          echo "Aggiorno a versione: $CLEAN_VERSION"
-          echo "Link download: $DOWNLOAD_URL"
+          echo "Processing Version: $CLEAN_VERSION"
           
-          # Esportiamo le variabili per farle leggere a Python in modo sicuro
           export CLEAN_VERSION
           export DOWNLOAD_URL
 
@@ -40,22 +38,22 @@ import json, os
 
 file_path = 'apps.json'
 if not os.path.exists(file_path):
-    print('Errore: apps.json non trovato nella cartella principale')
+    print(f'FATAL: {file_path} not found')
     exit(1)
 
 with open(file_path, 'r') as f:
     data = json.load(f)
 
-# Leggiamo le variabili d'ambiente in modo pulito e sicuro
-clean_version = os.environ.get('CLEAN_VERSION')
-download_url = os.environ.get('DOWNLOAD_URL')
+ver = os.environ.get('CLEAN_VERSION')
+url = os.environ.get('DOWNLOAD_URL')
 
+# Cerchiamo l'app corretta nel JSON (solitamente la prima nella lista)
 if 'apps' in data and len(data['apps']) > 0:
-    data['apps'][0]['version'] = clean_version
-    data['apps'][0]['downloadURL'] = download_url
-    print('Dati inseriti nel JSON con successo')
+    data['apps'][0]['version'] = ver
+    data['apps'][0]['downloadURL'] = url
+    print(f'SUCCESS: Updated to {ver}')
 else:
-    print('Errore: Struttura apps.json non valida')
+    print('ERROR: JSON structure invalid')
     exit(1)
     
 with open(file_path, 'w') as f:
@@ -63,9 +61,16 @@ with open(file_path, 'w') as f:
 "
 
       - name: Commit and Push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add apps.json
-          # Commit e push assicurandosi di puntare a main
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update apps.json version" && git push origin main)
+          # Commit solo se ci sono cambiamenti, poi pusha su main
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-update apps.json to ${{ github.event.release.tag_name }}"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
