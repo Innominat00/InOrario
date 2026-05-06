@@ -14,10 +14,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: main # <-- FONDAMENTALE: Checkout del branch principale, non del tag!
+          # Se il tuo branch principale si chiama "master", scrivi "master" qui sopra
 
       - name: Update JSON version
         env:
-          # Passiamo le variabili in modo sicuro a Python
           TAG_NAME: ${{ github.event.release.tag_name }}
           REPO: ${{ github.repository }}
         run: |
@@ -28,34 +30,42 @@ jobs:
           
           echo "Aggiorno a versione: $CLEAN_VERSION"
           echo "Link download: $DOWNLOAD_URL"
+          
+          # Esportiamo le variabili per farle leggere a Python in modo sicuro
+          export CLEAN_VERSION
+          export DOWNLOAD_URL
 
           python3 -c "
-          import json, os
-          
-          file_path = 'apps.json'
-          if not os.path.exists(file_path):
-              print('Errore: apps.json non trovato nella cartella principale')
-              exit(1)
+import json, os
 
-          with open(file_path, 'r') as f:
-              data = json.load(f)
-          
-          # Aggiorniamo i dati usando le variabili del terminale
-          if 'apps' in data and len(data['apps']) > 0:
-              data['apps'][0]['version'] = '$CLEAN_VERSION'
-              data['apps'][0]['downloadURL'] = '$DOWNLOAD_URL'
-              print('Dati inseriti nel JSON con successo')
-          else:
-              print('Errore: Struttura apps.json non valida')
-              exit(1)
-              
-          with open(file_path, 'w') as f:
-              json.dump(data, f, indent=2)
-          "
+file_path = 'apps.json'
+if not os.path.exists(file_path):
+    print('Errore: apps.json non trovato nella cartella principale')
+    exit(1)
+
+with open(file_path, 'r') as f:
+    data = json.load(f)
+
+# Leggiamo le variabili d'ambiente in modo pulito e sicuro
+clean_version = os.environ.get('CLEAN_VERSION')
+download_url = os.environ.get('DOWNLOAD_URL')
+
+if 'apps' in data and len(data['apps']) > 0:
+    data['apps'][0]['version'] = clean_version
+    data['apps'][0]['downloadURL'] = download_url
+    print('Dati inseriti nel JSON con successo')
+else:
+    print('Errore: Struttura apps.json non valida')
+    exit(1)
+    
+with open(file_path, 'w') as f:
+    json.dump(data, f, indent=2)
+"
 
       - name: Commit and Push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add apps.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update apps.json version" && git push)
+          # Commit e push assicurandosi di puntare a main
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update apps.json version" && git push origin main)
