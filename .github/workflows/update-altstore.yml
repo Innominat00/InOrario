@@ -8,7 +8,6 @@ on:
 jobs:
   update-json:
     runs-on: ubuntu-latest
-    # Diamo esplicitamente i permessi di scrittura per apps.json
     permissions:
       contents: write
     
@@ -16,61 +15,44 @@ jobs:
       - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: main # Forza il checkout sul branch main
+          ref: main # <- Risolve il problema della fotografia congelata
 
-      - name: Update JSON version
+      - name: Update apps.json
         env:
           TAG_NAME: ${{ github.event.release.tag_name }}
           REPO: ${{ github.repository }}
         run: |
-          # Fallback se avviato manualmente
+          # 1. Prepariamo le variabili (se non c'è una release, usa v1.4 come test)
           FINAL_TAG=${TAG_NAME:-v1.4}
           CLEAN_VERSION=${FINAL_TAG//v/}
           DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${FINAL_TAG}/InOrario.ipa"
           
-          echo "Processing Version: $CLEAN_VERSION"
+          echo "Sto per aggiornare la versione a: $CLEAN_VERSION"
+          echo "Il link sarà: $DOWNLOAD_URL"
           
-          export CLEAN_VERSION
-          export DOWNLOAD_URL
+          # 2. Controllo di sicurezza: il file esiste davvero?
+          if [ ! -f "apps.json" ]; then
+            echo "ERRORE CRITICO: Il file apps.json non esiste nella cartella principale!"
+            echo "Ecco i file presenti in questa cartella:"
+            ls -la
+            exit 1
+          fi
 
-          python3 -c "
-import json, os
-
-file_path = 'apps.json'
-if not os.path.exists(file_path):
-    print(f'FATAL: {file_path} not found')
-    exit(1)
-
-with open(file_path, 'r') as f:
-    data = json.load(f)
-
-ver = os.environ.get('CLEAN_VERSION')
-url = os.environ.get('DOWNLOAD_URL')
-
-# Cerchiamo l'app corretta nel JSON (solitamente la prima nella lista)
-if 'apps' in data and len(data['apps']) > 0:
-    data['apps'][0]['version'] = ver
-    data['apps'][0]['downloadURL'] = url
-    print(f'SUCCESS: Updated to {ver}')
-else:
-    print('ERROR: JSON structure invalid')
-    exit(1)
-    
-with open(file_path, 'w') as f:
-    json.dump(data, f, indent=2)
-"
+          # 3. La magia di JQ (niente Python, niente problemi di spazi)
+          jq ".apps[0].version = \"$CLEAN_VERSION\" | .apps[0].downloadURL = \"$DOWNLOAD_URL\"" apps.json > temp.json && mv temp.json apps.json
+          
+          echo "Aggiornamento JSON completato con successo!"
 
       - name: Commit and Push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add apps.json
-          # Commit solo se ci sono cambiamenti, poi pusha su main
+          
+          # 4. Facciamo il commit SOLO se il file è cambiato davvero
           if ! git diff --cached --quiet; then
-            git commit -m "chore: auto-update apps.json to ${{ github.event.release.tag_name }}"
+            git commit -m "Aggiornata versione AltStore a ${{ github.event.release.tag_name }}"
             git push origin main
           else
-            echo "No changes to commit"
+            echo "Nessuna modifica da salvare, la versione era già aggiornata."
           fi
