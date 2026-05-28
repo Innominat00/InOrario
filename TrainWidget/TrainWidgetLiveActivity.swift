@@ -39,7 +39,6 @@ struct TrainWidgetLiveActivity: Widget {
             }
             .padding()
             .background(Color.black.opacity(0.8))
-            // 👇 ECCO IL COLLEGAMENTO PER LA SCHERMATA DI BLOCCO 👇
             .widgetURL(URL(string: "inorario://train/\(context.attributes.trainNumber)"))
             
         } dynamicIsland: { context in
@@ -79,7 +78,6 @@ struct TrainWidgetLiveActivity: Widget {
             } minimal: {
                 Image(systemName: "tram.fill").foregroundColor(.orange)
             }
-            // 👇 ECCO IL COLLEGAMENTO PER LA DYNAMIC ISLAND 👇
             .widgetURL(URL(string: "inorario://train/\(context.attributes.trainNumber)"))
         }
     }

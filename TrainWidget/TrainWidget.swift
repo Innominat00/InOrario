@@ -1,58 +1,96 @@
-//
-//  TrainWidget.swift
-//  TrainWidget
-//
-//  Created by Carlo ‎Porta on 05/05/2026.
-//
-
 import WidgetKit
 import SwiftUI
 
+struct WidgetSavedTrain: Codable, Identifiable {
+    var id: String { number }
+    let number: String
+    let description: String
+}
+
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+        SimpleEntry(date: Date(), trains: [
+            WidgetSavedTrain(number: "2010", description: "Milano Centrale"),
+            WidgetSavedTrain(number: "24555", description: "Treviglio")
+        ])
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
+        let trains = getFavorites()
+        let entry = SimpleEntry(date: Date(), trains: trains.isEmpty ? placeholder(in: context).trains : trains)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
-            entries.append(entry)
-        }
-
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+        let trains = getFavorites()
+        let entry = SimpleEntry(date: Date(), trains: trains)
+        
+        let timeline = Timeline(entries: [entry], policy: .never)
         completion(timeline)
     }
-
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
+    
+    private func getFavorites() -> [WidgetSavedTrain] {
+        guard let defaults = UserDefaults(suiteName: "group.carlo.InOrario"),
+              let data = defaults.data(forKey: "savedFavoriteTrains_v3"),
+              let decoded = try? JSONDecoder().decode([WidgetSavedTrain].self, from: data) else {
+            return []
+        }
+        return decoded
+    }
 }
 
 struct SimpleEntry: TimelineEntry {
     let date: Date
-    let emoji: String
+    let trains: [WidgetSavedTrain]
 }
 
 struct TrainWidgetEntryView : View {
     var entry: Provider.Entry
+    @Environment(\.widgetFamily) var family
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "star.fill")
+                    .foregroundColor(.yellow)
+                Text("Treni Preferiti")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+            }
+            .padding(.bottom, 4)
 
-            Text("Emoji:")
-            Text(entry.emoji)
+            if entry.trains.isEmpty {
+                Text("Nessun treno preferito.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else {
+                let displayCount = family == .systemSmall ? 2 : 4
+                ForEach(entry.trains.prefix(displayCount)) { train in
+                    Link(destination: URL(string: "inorario://\(train.number)")!) {
+                        HStack {
+                            Image(systemName: "train.side.front.car")
+                                .foregroundColor(.blue)
+                                .font(.subheadline)
+                            VStack(alignment: .leading) {
+                                Text("Treno \(train.number)")
+                                    .font(.subheadline)
+                                    .bold()
+                                    .foregroundColor(.primary)
+                                Text(train.description)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(8)
+                    }
+                }
+            }
+            Spacer()
         }
     }
 }
@@ -71,14 +109,8 @@ struct TrainWidget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Treni Preferiti")
+        .description("Accedi rapidamente ai tuoi treni preferiti.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
-}
-
-#Preview(as: .systemSmall) {
-    TrainWidget()
-} timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
 }

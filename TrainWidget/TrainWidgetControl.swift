@@ -1,10 +1,3 @@
-//
-//  TrainWidgetControl.swift
-//  TrainWidget
-//
-//  Created by Carlo ‎Porta on 05/05/2026.
-//
-
 import AppIntents
 import SwiftUI
 import WidgetKit
@@ -12,43 +5,24 @@ import WidgetKit
 struct TrainWidgetControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(
-            kind: "carlo.InOrario.TrainWidget",
-            provider: Provider()
-        ) { value in
-            ControlWidgetToggle(
-                "Start Timer",
-                isOn: value,
-                action: StartTimerIntent()
-            ) { isRunning in
-                Label(isRunning ? "On" : "Off", systemImage: "timer")
+            kind: "carlo.InOrario.TrainWidgetControl"
+        ) {
+            ControlWidgetButton(action: OpenSearchIntent()) {
+                Label("Cerca Treno", systemImage: "magnifyingglass")
             }
         }
-        .displayName("Timer")
-        .description("A an example control that runs a timer.")
+        .displayName("Cerca Treno")
+        .description("Apri rapidamente la ricerca treni.")
     }
 }
 
-extension TrainWidgetControl {
-    struct Provider: ControlValueProvider {
-        var previewValue: Bool {
-            false
-        }
-
-        func currentValue() async throws -> Bool {
-            let isRunning = true // Check if the timer is running
-            return isRunning
-        }
-    }
-}
-
-struct StartTimerIntent: SetValueIntent {
-    static let title: LocalizedStringResource = "Start a timer"
-
-    @Parameter(title: "Timer is running")
-    var value: Bool
+struct OpenSearchIntent: AppIntent {
+    static let title: LocalizedStringResource = "Cerca Treno"
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
-        // Start / stop the timer based on `value`.
+        // This intent will just launch the app since openAppWhenRun is true.
+        // You can handle deep linking in the app's `onOpenURL` to open the search directly.
         return .result()
     }
 }
