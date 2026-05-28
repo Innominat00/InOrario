@@ -76,35 +76,6 @@ struct ContentView: View {
         Station(name: "Forlanini", rfiID: "3169", vtID: nil, lat: 45.4625, lon: 9.2368)
     ]
     
-    var allReferenceStations: [Station] {
-        let mainStations = [
-            Station(name: "Magenta", rfiID: "1618", vtID: "S01021", lat: 45.4641, lon: 8.8845),
-            Station(name: "Rho Fiera", rfiID: "3098", vtID: "S01026", lat: 45.5215, lon: 9.0883),
-            Station(name: "Porta Garibaldi", rfiID: "1715", vtID: "S01058", lat: 45.4844, lon: 9.1887),
-            Station(name: "Milano Centrale", rfiID: "1728", vtID: "S01700", lat: 45.4849, lon: 9.2033),
-            Station(name: "Vittuone-Arluno", rfiID: "3119", vtID: "S01023", lat: 45.4921, lon: 8.9568),
-            Station(name: "Pregnana Milanese", rfiID: "381", vtID: "S01024", lat: 45.5036, lon: 9.0069),
-            Station(name: "Novara", rfiID: "1917", vtID: "S01017", lat: 45.4524, lon: 8.6253),
-            Station(name: "Trecate", rfiID: "2909", vtID: "S01019", lat: 45.4374, lon: 8.7428),
-            Station(name: "Rho", rfiID: "2345", vtID: "S01025", lat: 45.5262, lon: 9.0402)
-        ]
-        return mainStations + passanteStations
-    }
-    
-    var nearbyStation: Station? {
-        guard let userLoc = locationManager.userLocation else { return nil }
-        
-        let sortedCandidates = allReferenceStations.compactMap { s -> (Station, Double)? in
-            guard let c = s.coordinate else { return nil }
-            let dist = userLoc.distance(from: CLLocation(latitude: c.latitude, longitude: c.longitude))
-            return (s, dist)
-        }.sorted(by: { $0.1 < $1.1 })
-        
-        if let closest = sortedCandidates.first, closest.1 < 15000 { // 15 km
-            return closest.0
-        }
-        return nil
-    }
     
     var body: some View {
         NavigationStack {
@@ -142,7 +113,7 @@ struct ContentView: View {
                     ForEach(manager.sectionOrder, id: \.self) { section in
                         switch section {
                         case .nearby:
-                            if let nearby = nearbyStation {
+                            if let nearby = locationManager.nearbyStation {
                                 Section(header: Text("📍 Stazione Vicina").font(.subheadline.bold())) {
                                     NavigationLink(destination: SmartBoardView(station: nearby)) {
                                         HStack {
@@ -233,7 +204,7 @@ struct ContentView: View {
                                     ScrollView(.horizontal, showsIndicators: false) {
                                         HStack(spacing: 0) {
                                             ForEach(Array(passanteStations.enumerated()), id: \.element.id) { index, station in
-                                                let isNearby = nearbyStation?.rfiID == station.rfiID
+                                                let isNearby = locationManager.nearbyStation?.rfiID == station.rfiID
                                                 NavigationLink(destination: SmartBoardView(station: station)) {
                                                     PassanteNodeView(station: station, isFirst: index == 0, isLast: index == passanteStations.count - 1, isNearby: isNearby)
                                                 }
