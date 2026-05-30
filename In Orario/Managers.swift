@@ -185,6 +185,12 @@ struct Haptics {
     }
 }
 
+struct StopsResult: Sendable {
+    let stops: [Stop]
+    let status: TrainStatus
+    let errorMessage: String?
+}
+
 // --- 3. MOTORE DI RICERCA IBRIDO ---
 @MainActor class TrainManager: ObservableObject {
     @Published var trains: [Train] = []
@@ -194,6 +200,11 @@ struct Haptics {
     @Published var myStations: [Station] = []
     @Published var searchResults: [SavedTrain] = []
     @Published var searchStationResults: [VTSearchStation] = []
+    @Published var searchTrenitaliaLocations: [TrenitaliaLocation] = []
+    @Published var rfiStationDictionary: [String: String] = [:]
+    @Published var rfiStationNormalizedDict: [String: String] = [:]
+    @Published var searchRFIStationResults: [RFIStation] = []
+    @Published var allRFIStations: [RFIStation] = []
     @Published var sectionOrder: [AppSection] = AppSection.allCases
     @Published var isSearching: Bool = false
     @Published var isLoading = false
@@ -204,11 +215,18 @@ struct Haptics {
     @Published var stationAlerts: String? = nil
     @Published var activeLiveActivities: Set<String> = []
     
+    @Published var travelSolutions: [TravelSolution] = []
+    @Published var favoriteRoutes: [FavoriteRoute] = []
+    @Published var savedTrips: [SavedTrip] = []
+    @Published var isSearchingSolutions: Bool = false
+    
     private var refreshTimer: AnyCancellable?
     
     private let favoritesKey = "savedFavoriteTrains_v3"
     private let myStationsKey = "savedMyStations_v3"
     private let sectionOrderKey = "savedSectionOrder_v3"
+    private let favoriteRoutesKey = "savedFavoriteRoutes_v1"
+    private let savedTripsKey = "savedTrips_v1"
     
     let rfiStationMap: [String: String] = [
         "novara": "1917",
@@ -243,7 +261,49 @@ struct Haptics {
         }
     }
     
-    init() { loadFavorites() }
+    init() { 
+        loadFavorites()
+        loadRFIStations()
+    }
+    
+    private func loadRFIStations() {
+        if let url = Bundle.main.url(forResource: "rfi_stations", withExtension: "json"),
+           let data = try? Data(contentsOf: url),
+           let decoded = try? JSONDecoder().decode([RFIStation].self, from: data) {
+            self.allRFIStations = decoded
+            
+            var dict: [String: String] = [:]
+            var normDict: [String: String] = [:]
+            for station in decoded {
+                let lower = station.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                dict[lower] = station.id
+                
+                let norm = normalizeStationName(station.name)
+                normDict[norm] = station.id
+            }
+            self.rfiStationDictionary = dict
+            self.rfiStationNormalizedDict = normDict
+        }
+    }
+    
+    func normalizeStationName(_ name: String) -> String {
+        return name.lowercased()
+            .replacingOccurrences(of: "p.", with: "porta")
+            .replacingOccurrences(of: "s.", with: "san")
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "'", with: "")
+            .folding(options: .diacriticInsensitive, locale: .current)
+    }
+    
+    func getRfiID(for vtName: String) -> String? {
+        let lower = vtName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        if let exact = rfiStationDictionary[lower] {
+            return exact
+        }
+        let norm = normalizeStationName(vtName)
+        return rfiStationNormalizedDict[norm]
+    }
     
     func loadFavorites() {
         if let data = UserDefaults.standard.data(forKey: favoritesKey), let decoded = try? JSONDecoder().decode([SavedTrain].self, from: data) { self.favoriteTrains = decoded }
@@ -262,6 +322,14 @@ struct Haptics {
             }
             self.sectionOrder = loaded
         }
+        
+        if let data = UserDefaults.standard.data(forKey: favoriteRoutesKey), let decoded = try? JSONDecoder().decode([FavoriteRoute].self, from: data) {
+            self.favoriteRoutes = decoded
+        }
+        
+        if let data = UserDefaults.standard.data(forKey: savedTripsKey), let decoded = try? JSONDecoder().decode([SavedTrip].self, from: data) {
+            self.savedTrips = decoded
+        }
     }
     
     func saveFavorites() {
@@ -275,6 +343,18 @@ struct Haptics {
             UserDefaults.standard.set(encoded, forKey: myStationsKey) 
             if let groupDefaults = UserDefaults(suiteName: "group.carlo.InOrario") {
                 groupDefaults.set(encoded, forKey: myStationsKey)
+            }
+        }
+        if let encoded = try? JSONEncoder().encode(favoriteRoutes) {
+            UserDefaults.standard.set(encoded, forKey: favoriteRoutesKey)
+            if let groupDefaults = UserDefaults(suiteName: "group.carlo.InOrario") {
+                groupDefaults.set(encoded, forKey: favoriteRoutesKey)
+            }
+        }
+        if let encoded = try? JSONEncoder().encode(savedTrips) {
+            UserDefaults.standard.set(encoded, forKey: savedTripsKey)
+            if let groupDefaults = UserDefaults(suiteName: "group.carlo.InOrario") {
+                groupDefaults.set(encoded, forKey: savedTripsKey)
             }
         }
     }
@@ -297,9 +377,43 @@ struct Haptics {
     
     func isFavorite(trainNumber: String) -> Bool { favoriteTrains.contains { $0.number == trainNumber } }
     
+    func toggleFavoriteRoute(originName: String, originID: String, destName: String, destID: String) {
+        if let index = favoriteRoutes.firstIndex(where: { $0.originID == originID && $0.destinationID == destID }) {
+            favoriteRoutes.remove(at: index)
+            Haptics.notify(.warning)
+        } else {
+            favoriteRoutes.append(FavoriteRoute(originName: originName, originID: originID, destinationName: destName, destinationID: destID))
+            Haptics.notify(.success)
+        }
+        saveFavorites()
+    }
+    
+    func isFavoriteRoute(originID: String, destID: String) -> Bool {
+        return favoriteRoutes.contains { $0.originID == originID && $0.destinationID == destID }
+    }
+    
+    func toggleSavedTrip(solution: TravelSolution) {
+        let tripId = "\(solution.origin)-\(solution.destination)-\(solution.departureTime)"
+        if let index = savedTrips.firstIndex(where: { $0.id == tripId }) {
+            savedTrips.remove(at: index)
+            Haptics.notify(.warning)
+        } else {
+            let segs = solution.segments.map { SavedTripSegment(origin: $0.origin, destination: $0.destination, departureTime: $0.departureTime, arrivalTime: $0.arrivalTime, trainNumber: $0.trainNumber, trainCategory: $0.trainCategory) }
+            let saved = SavedTrip(id: tripId, origin: solution.origin, destination: solution.destination, departureTime: solution.departureTime, arrivalTime: solution.arrivalTime, duration: solution.duration, segments: segs)
+            savedTrips.append(saved)
+            Haptics.notify(.success)
+        }
+        saveFavorites()
+    }
+    
+    func isTripSaved(solution: TravelSolution) -> Bool {
+        let tripId = "\(solution.origin)-\(solution.destination)-\(solution.departureTime)"
+        return savedTrips.contains { $0.id == tripId }
+    }
+    
     func addMyStation(name: String, vtID: String) {
         if !myStations.contains(where: { $0.vtID == vtID }) {
-            let possibleRfiID = rfiStationMap[name.lowercased()]
+            let possibleRfiID = getRfiID(for: name)
             let newStation = Station(name: name.capitalized, rfiID: possibleRfiID, vtID: vtID, lat: nil, lon: nil)
             myStations.append(newStation)
             saveFavorites()
@@ -347,6 +461,170 @@ struct Haptics {
             self.searchStationResults = (try? JSONDecoder().decode([VTSearchStation].self, from: data)) ?? []
             self.isSearching = false
         } catch { self.isSearching = false }
+    }
+    
+    func searchTravelLocations(query: String) async {
+        guard query.count >= 2 else { self.searchTrenitaliaLocations = []; return }
+        self.isSearching = true
+        let safeQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        let urlString = "https://www.lefrecce.it/Channels.Website.BFF.WEB/website/locations/search?name=\(safeQuery)"
+        guard let url = URL(string: urlString) else { self.isSearching = false; return }
+        
+        var request = URLRequest(url: url)
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)", forHTTPHeaderField: "User-Agent")
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            self.searchTrenitaliaLocations = (try? JSONDecoder().decode([TrenitaliaLocation].self, from: data)) ?? []
+            self.isSearching = false
+        } catch { self.isSearching = false }
+    }
+    
+    func searchTravelSolutions(originID: String, destID: String, date: Date) async {
+        self.isSearchingSolutions = true
+        self.travelSolutions = []
+        
+        guard let depId = Int(originID), let arrId = Int(destID) else {
+            self.isSearchingSolutions = false
+            return
+        }
+        
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "Europe/Rome")
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.000ZZZZZ"
+        let dateStr = f.string(from: date)
+        
+        let urlString = "https://www.lefrecce.it/Channels.Website.BFF.WEB/website/ticket/solutions"
+        guard let url = URL(string: urlString) else { self.isSearchingSolutions = false; return }
+        
+        let payload: [String: Any] = [
+            "departureLocationId": depId,
+            "arrivalLocationId": arrId,
+            "departureTime": dateStr,
+            "adults": 1,
+            "children": 0,
+            "criteria": [
+                "frecceOnly": false,
+                "regionalOnly": false,
+                "noChanges": false,
+                "order": "DEPARTURE_DATE",
+                "offset": 0,
+                "limit": 15
+            ],
+            "advancedSearchRequest": [
+                "bestFare": false
+            ]
+        ]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)", forHTTPHeaderField: "User-Agent")
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+            let (data, _) = try await URLSession.shared.data(for: request)
+            
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let solutions = json["solutions"] as? [[String: Any]] else {
+                self.isSearchingSolutions = false
+                return
+            }
+            
+            var parsedSolutions: [TravelSolution] = []
+            
+            for item in solutions {
+                guard let sol = item["solution"] as? [String: Any] else { continue }
+                
+                let origin = (sol["origin"] as? String) ?? ""
+                let destination = (sol["destination"] as? String) ?? ""
+                let duration = (sol["duration"] as? String) ?? ""
+                
+                var depTimeStr = "--:--"
+                var arrTimeStr = "--:--"
+                
+                if let dt = sol["departureTime"] as? String, let d = f.date(from: dt) {
+                    depTimeStr = SharedFormatters.time.string(from: d)
+                }
+                if let at = sol["arrivalTime"] as? String, let a = f.date(from: at) {
+                    arrTimeStr = SharedFormatters.time.string(from: a)
+                }
+                
+                var category = "Treno"
+                var num = ""
+                
+                if let trains = sol["trains"] as? [[String: Any]], let firstTrain = trains.first {
+                    category = (firstTrain["trainCategory"] as? String) ?? (firstTrain["acronym"] as? String) ?? "Treno"
+                    num = (firstTrain["name"] as? String) ?? (firstTrain["description"] as? String) ?? ""
+                    
+                    // If there are multiple trains, denote changes
+                    if trains.count > 1 {
+                        num += " (+\(trains.count - 1) cambi)"
+                    }
+                }
+                
+                var segments: [TravelSegment] = []
+                
+                if let nodes = sol["nodes"] as? [[String: Any]] {
+                    for node in nodes {
+                        let nodeOrigin = (node["origin"] as? String) ?? ""
+                        let nodeDest = (node["destination"] as? String) ?? ""
+                        var nDepStr = "--:--"
+                        var nArrStr = "--:--"
+                        
+                        if let dt = node["departureTime"] as? String, let d = f.date(from: dt) { nDepStr = SharedFormatters.time.string(from: d) }
+                        if let at = node["arrivalTime"] as? String, let a = f.date(from: at) { nArrStr = SharedFormatters.time.string(from: a) }
+                        
+                        var nCat = "Treno"
+                        var nNum = ""
+                        if let train = node["train"] as? [String: Any] {
+                            nCat = (train["trainCategory"] as? String) ?? (train["acronym"] as? String) ?? "Treno"
+                            nNum = (train["name"] as? String) ?? (train["description"] as? String) ?? ""
+                        }
+                        
+                        if nodeOrigin.lowercased().hasPrefix("milano") && nodeDest.lowercased().hasPrefix("milano") && nodeOrigin != nodeDest {
+                            nCat = "Trasporto Urbano"
+                            nNum = "(Metro / Mezzi)"
+                        }
+                        
+                        segments.append(TravelSegment(
+                            origin: nodeOrigin,
+                            destination: nodeDest,
+                            departureTime: nDepStr,
+                            arrivalTime: nArrStr,
+                            trainNumber: nNum,
+                            trainCategory: nCat
+                        ))
+                    }
+                }
+                
+                parsedSolutions.append(TravelSolution(
+                    trainNumber: num,
+                    category: category,
+                    departureTime: depTimeStr,
+                    arrivalTime: arrTimeStr,
+                    origin: origin.capitalized,
+                    destination: destination.capitalized,
+                    duration: duration,
+                    segments: segments
+                ))
+            }
+            
+            self.travelSolutions = parsedSolutions
+            self.isSearchingSolutions = false
+            
+        } catch {
+            self.isSearchingSolutions = false
+        }
+    }
+    
+    func searchRFIStationsLocally(query: String) {
+        guard query.count >= 2 else { self.searchRFIStationResults = []; return }
+        let lowerQuery = query.lowercased()
+        self.searchRFIStationResults = self.allRFIStations.filter { $0.name.lowercased().contains(lowerQuery) }
     }
     
     // --- OFF-MAIN-THREAD OPTIMIZATIONS ---
@@ -502,18 +780,13 @@ struct Haptics {
         self.isLoading = false
     }
     
-    struct StopsResult {
-        let stops: [Stop]
-        let status: TrainStatus
-        let errorMessage: String?
-    }
     
-    nonisolated private func performStopsFetch(for trainNumber: String) async -> StopsResult {
+    nonisolated func fetchLiveStops(for trainNumber: String) async -> StopsResult {
         let cleanNumber = trainNumber.trimmingCharacters(in: .whitespacesAndNewlines)
         let searchUrl = "https://www.viaggiatreno.it/infomobilita/resteasy/viaggiatreno/cercaNumeroTrenoTrenoAutocomplete/\(cleanNumber)"
         
         guard let sUrl = URL(string: searchUrl) else {
-            return StopsResult(stops: [], status: TrainStatus(), errorMessage: "URL non valido.")
+            return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "URL non valido.")
         }
         
         do {
@@ -521,22 +794,22 @@ struct Haptics {
             let result = String(data: sData, encoding: .utf8) ?? ""
             
             if result.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return StopsResult(stops: [], status: TrainStatus(), errorMessage: "Treno non tracciato o non ancora nel sistema.")
+                return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "Treno non tracciato o non ancora nel sistema.")
             }
             
             let lines = result.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
             guard let targetLine = lines.first(where: { $0.contains("|\(cleanNumber)-") }) ?? lines.first else {
-                return StopsResult(stops: [], status: TrainStatus(), errorMessage: "Dettagli del treno non trovati.")
+                return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "Dettagli del treno non trovati.")
             }
             
             let pipes = targetLine.components(separatedBy: "|")
             guard pipes.count >= 2 else {
-                return StopsResult(stops: [], status: TrainStatus(), errorMessage: "Dati API ViaggiaTreno incompleti.")
+                return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "Dati API ViaggiaTreno incompleti.")
             }
             
             let subParts = pipes[1].components(separatedBy: "-")
             guard subParts.count >= 2 else {
-                return StopsResult(stops: [], status: TrainStatus(), errorMessage: "ID Stazione di origine non trovato.")
+                return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "ID Stazione di origine non trovato.")
             }
             
             let originID = subParts[1]
@@ -546,20 +819,20 @@ struct Haptics {
             if !timestamp.isEmpty { stopsUrl += "/\(timestamp)" }
             
             guard let stUrl = URL(string: stopsUrl) else {
-                return StopsResult(stops: [], status: TrainStatus(), errorMessage: "URL fermate non valido.")
+                return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "URL fermate non valido.")
             }
             
             let request = URLRequest(url: stUrl)
             let (stData, response) = try await URLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200, !stData.isEmpty else {
-                return StopsResult(stops: [], status: TrainStatus(), errorMessage: "Dati in aggiornamento o temporaneamente non disponibili.")
+                return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "Dati in aggiornamento o temporaneamente non disponibili.")
             }
             
             guard let json = try? JSONSerialization.jsonObject(with: stData) as? [String: Any] else {
-                return StopsResult(stops: [], status: TrainStatus(), errorMessage: "Il server ha restituito dati illeggibili.")
+                return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "Il server ha restituito dati illeggibili.")
             }
             
-            var status = TrainStatus()
+            var status = await TrainStatus()
             status.isDeparted = !(json["nonPartito"] as? Bool ?? true)
             status.lastStation = (json["stazioneUltimoRilevamento"] as? String) ?? "--"
             status.lastTime = (json["compOraUltimoRilevamento"] as? String) ?? (json["oraUltimoRilevamento"] as? String) ?? "--:--"
@@ -599,9 +872,9 @@ struct Haptics {
             }
             return StopsResult(stops: [], status: status, errorMessage: "Nessuna fermata trovata.")
         } catch is CancellationError {
-            return StopsResult(stops: [], status: TrainStatus(), errorMessage: nil)
+            return await StopsResult(stops: [], status: TrainStatus(), errorMessage: nil)
         } catch {
-            return StopsResult(stops: [], status: TrainStatus(), errorMessage: "Errore di rete o blocco di sicurezza (controlla i permessi ATS nel file Info.plist).")
+            return await StopsResult(stops: [], status: TrainStatus(), errorMessage: "Errore di rete o blocco di sicurezza (controlla i permessi ATS nel file Info.plist).")
         }
     }
     
@@ -614,7 +887,7 @@ struct Haptics {
         }
         
         let cleanNumber = train.number.trimmingCharacters(in: .whitespacesAndNewlines)
-        let result = await performStopsFetch(for: cleanNumber)
+        let result = await fetchLiveStops(for: cleanNumber)
         
         if !isRefresh || result.errorMessage == nil {
             self.selectedTrainStops = result.stops

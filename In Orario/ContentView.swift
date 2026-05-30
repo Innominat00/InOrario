@@ -52,6 +52,7 @@ struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     
     @State private var deepLinkTrain: Train? = nil
+    @State private var selectedFavoriteTrain: Train? = nil
     
     var appTitle: String {
         if hasUrgentNews {
@@ -112,23 +113,7 @@ struct ContentView: View {
                 List {
                     ForEach(manager.sectionOrder, id: \.self) { section in
                         switch section {
-                        case .nearby:
-                            if let nearby = locationManager.nearbyStation {
-                                Section(header: Text("📍 Stazione Vicina").font(.subheadline.bold())) {
-                                    NavigationLink(destination: SmartBoardView(station: nearby)) {
-                                        HStack {
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text("Sei qui").font(.caption2).fontWeight(.heavy).foregroundColor(.orange).textCase(.uppercase)
-                                                Text(nearby.name).font(.title3).bold().foregroundColor(.primary)
-                                            }
-                                            Spacer()
-                                            Image(systemName: "location.circle.fill").font(.title).foregroundColor(.orange)
-                                        }
-                                        .padding(.vertical, 8)
-                                        .contentShape(Rectangle())
-                                    }
-                                }
-                            }
+
                             
                         case .favoriteTrains:
                             if !manager.favoriteTrains.isEmpty {
@@ -136,7 +121,9 @@ struct ContentView: View {
                                     DisclosureGroup(isExpanded: $isFavoritesExpanded) {
                                         ForEach(manager.favoriteTrains) { fav in
                                             let dummy = manager.createDummyTrain(from: fav)
-                                            NavigationLink(destination: TrainStopsView(train: dummy)) {
+                                            Button {
+                                                selectedFavoriteTrain = dummy
+                                            } label: {
                                                 HStack {
                                                     Image(systemName: "train.side.front.car").foregroundColor(.blue)
                                                     VStack(alignment: .leading) {
@@ -147,6 +134,7 @@ struct ContentView: View {
                                                 .padding(.vertical, 4)
                                                 .contentShape(Rectangle())
                                             }
+                                            .buttonStyle(.plain)
                                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                                 Button(role: .destructive) {
                                                     manager.toggleFavorite(trainNumber: fav.number, description: fav.description)
@@ -156,13 +144,15 @@ struct ContentView: View {
                                             }
                                         }
                                     } label: {
-                                        Label("Treni Preferiti", systemImage: "star.fill").font(.headline).foregroundColor(.yellow).padding(.vertical, 4)
+                                        Label("I miei Treni", systemImage: "star.fill").font(.headline).foregroundColor(.yellow).padding(.vertical, 4)
                                     }
                                     .onChange(of: isFavoritesExpanded) { oldValue, newValue in
                                         Haptics.play(.light)
                                     }
                                 }
                             }
+                            
+
                             
                         case .myStations:
                             if !manager.myStations.isEmpty {
@@ -262,6 +252,25 @@ struct ContentView: View {
                                 )
                         }
                         
+                        NavigationLink(destination: SavedTripsView()) {
+                            Image(systemName: "bookmark.fill")
+                                .foregroundColor(.green)
+                                .overlay(
+                                    Group {
+                                        if !manager.savedTrips.isEmpty {
+                                            Text("\(manager.savedTrips.count)")
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 4)
+                                                .padding(.vertical, 2)
+                                                .background(Color.green)
+                                                .clipShape(Capsule())
+                                                .offset(x: 10, y: -10)
+                                        }
+                                    }
+                                )
+                        }
+                        
                         Button {
                             Haptics.play(.medium)
                             showSearchSheet = true
@@ -295,8 +304,15 @@ struct ContentView: View {
         }
         .environmentObject(metroCache)
         
+        .sheet(item: $selectedFavoriteTrain) { t in
+            NavigationStack {
+                TrainStopsView(train: t)
+            }
+        }
         .sheet(item: $deepLinkTrain) { t in
-            TrainStopsView(train: t)
+            NavigationStack {
+                TrainStopsView(train: t)
+            }
         }
         .onOpenURL { url in
             guard url.scheme == "inorario" else { return }

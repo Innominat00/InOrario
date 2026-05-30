@@ -16,25 +16,31 @@ struct OnboardingView: View {
     let pages = [
         OnboardingPage(
             title: "Benvenuto su InOrario",
-            description: "Il tuo compagno ideale per viaggiare in tutta Italia, pensato in particolare per Milano. Tieni d'occhio metro, passante e treni preferiti in un'unica schermata.",
+            description: "Il tuo compagno ideale per viaggiare in treno. Tieni d'occhio stazioni, treni e passante in un'unica schermata premium, pensata in particolare per i pendolari.",
             iconName: "train.side.front.car",
             iconColor: .blue
         ),
         OnboardingPage(
-            title: "Salva i tuoi Preferiti",
-            description: "Personalizza la tua dashboard in due modi semplici:\n\n• Cerca in alto: Digita il nome di una stazione e premi il tasto \"+\" per salvarla. Cerca un treno per numero per inserirlo direttamente nei preferiti.\n\n• Swipe rapido: Nel tabellone di qualsiasi stazione, trascina un treno verso sinistra per salvarlo all'istante con la stellina ⭐",
-            iconName: "star.fill",
-            iconColor: .yellow
+            title: "Dashboard su Misura",
+            description: "Una vista pulita e ordinata suddivisa in tre sezioni principali:\n\n• Le Mie Stazioni: Le partenze e arrivi in tempo reale dei tuoi scali preferiti.\n\n• I miei Treni: Per monitorare all'istante lo stato dei singoli treni che usi di più.\n\n• Passante Ferroviario: La mappa orizzontale dinamica delle stazioni del passante di Milano.\n\nPersonalizza e riordina le sezioni come preferisci premendo il pulsante in fondo alla schermata!",
+            iconName: "slider.horizontal.3",
+            iconColor: .blue
         ),
         OnboardingPage(
-            title: "Notizie & Scioperi in Tempo Reale",
-            description: "L'app ti avvisa subito in caso di scioperi o disservizi con notizie elaborate tramite intelligenza artificiale per essere chiare e precise.",
-            iconName: "newspaper.fill",
-            iconColor: .red
+            title: "Salva i tuoi Viaggi",
+            description: "Pianifichi spesso la stessa combinazione di treni per i tuoi spostamenti?\n\n• Salva le Soluzioni: Cerca una soluzione di viaggio e premi l'icona del segnalibro 🔖 per memorizzarla.\n\n• Accesso Rapido: Accedi all'elenco completo dei tuoi viaggi salvati toccando l'icona verde del segnalibro in alto a destra nella schermata principale.",
+            iconName: "bookmark.fill",
+            iconColor: .green
         ),
         OnboardingPage(
-            title: "Stazioni Vicine",
-            description: "Permetti l'accesso alla tua posizione per scoprire automaticamente le stazioni del Passante e di Trenord più vicine a te.",
+            title: "Trasporto Urbano Integrato",
+            description: "Spostarsi a Milano è semplice e immediato.\n\nQuando pianifichi un viaggio con cambi tra stazioni milanesi (es. da Centrale a Porta Garibaldi), l'app suggerisce automaticamente il Trasporto Urbano (Metro / Mezzi) con tempi stimati di percorrenza, evitandoti la ricerca di scomodi treni regionali cittadini.",
+            iconName: "tram.fill",
+            iconColor: .purple
+        ),
+        OnboardingPage(
+            title: "Notizie e GPS",
+            description: "L'app ti avvisa all'istante in caso di scioperi o ritardi sulla linea tramite notizie chiare riassunte dall'AI. Abilita il GPS per rilevare subito le stazioni del Passante più vicine a te.",
             iconName: "location.circle.fill",
             iconColor: .orange
         )

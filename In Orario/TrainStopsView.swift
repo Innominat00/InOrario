@@ -6,65 +6,67 @@ import ActivityKit
 
 struct TrainStopsView: View {
     let train: Train
+    var showCloseButton: Bool = true
     @EnvironmentObject var manager: TrainManager
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                if manager.isStopsLoading { ProgressView().padding() }
-                else if let error = manager.stopErrorMessage {
-                    VStack { Image(systemName: "clock.badge.exclamationmark").font(.largeTitle).padding(); Text(error).multilineTextAlignment(.center).padding() }
-                } else {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Circle().fill(manager.currentTrainStatus.statusMessage.contains("In orario") ? .green : (manager.currentTrainStatus.isDeparted ? .red : .gray)).frame(width: 12, height: 12)
-                            Text(manager.currentTrainStatus.statusMessage).font(.headline).foregroundColor(.primary)
-                            Spacer()
-                        }
-                        if let note = manager.currentTrainStatus.cancellationNote { Text(note).font(.caption).bold().padding(6).background(Color.red.opacity(0.2)).foregroundColor(.red).cornerRadius(4) }
-                        if manager.currentTrainStatus.isDeparted {
-                            HStack { Image(systemName: "location.fill").foregroundColor(.secondary); Text("Ultimo rilevamento: ").foregroundColor(.secondary); Text(manager.currentTrainStatus.lastStation).bold(); Text("alle \(manager.currentTrainStatus.lastTime)").foregroundColor(.secondary) }.font(.caption)
-                        } else { Text("Il treno non ha ancora lasciato la stazione di partenza.").font(.caption).foregroundColor(.secondary) }
+        VStack(spacing: 0) {
+            if manager.isStopsLoading { ProgressView().padding() }
+            else if let error = manager.stopErrorMessage {
+                VStack { Image(systemName: "clock.badge.exclamationmark").font(.largeTitle).padding(); Text(error).multilineTextAlignment(.center).padding() }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Circle().fill(manager.currentTrainStatus.statusMessage.contains("In orario") ? .green : (manager.currentTrainStatus.isDeparted ? .red : .gray)).frame(width: 12, height: 12)
+                        Text(manager.currentTrainStatus.statusMessage).font(.headline).foregroundColor(.primary)
+                        Spacer()
                     }
-                    .padding().background(Color(.secondarySystemBackground)).cornerRadius(12).padding()
-                    
-                    List(manager.selectedTrainStops) { stop in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(stop.stationName).font(.headline)
-                                
-                                if let act = stop.actualTime {
-                                    Text("Effettivo: \(act)")
-                                        .font(.caption)
-                                        .foregroundColor(stop.delay <= 2 ? .green : (stop.delay <= 6 ? .orange : .red))
-                                }
-                                else if let est = stop.estimatedTime {
-                                    Text("Previsto: \(est)")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                        .bold()
-                                }
-                            }
-                            Spacer()
+                    if let note = manager.currentTrainStatus.cancellationNote { Text(note).font(.caption).bold().padding(6).background(Color.red.opacity(0.2)).foregroundColor(.red).cornerRadius(4) }
+                    if manager.currentTrainStatus.isDeparted {
+                        HStack { Image(systemName: "location.fill").foregroundColor(.secondary); Text("Ultimo rilevamento: ").foregroundColor(.secondary); Text(manager.currentTrainStatus.lastStation).bold(); Text("alle \(manager.currentTrainStatus.lastTime)").foregroundColor(.secondary) }.font(.caption)
+                    } else { Text("Il treno non ha ancora lasciato la stazione di partenza.").font(.caption).foregroundColor(.secondary) }
+                }
+                .padding().background(Color(.secondarySystemBackground)).cornerRadius(12).padding()
+                
+                List(manager.selectedTrainStops) { stop in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(stop.stationName).font(.headline)
                             
-                            if stop.actualTime == nil && stop.estimatedTime != nil {
-                                Text(stop.time)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .strikethrough()
-                            } else {
-                                Text(stop.time).font(.subheadline).foregroundColor(.secondary)
+                            if let act = stop.actualTime {
+                                Text("Effettivo: \(act)")
+                                    .font(.caption)
+                                    .foregroundColor(stop.delay <= 2 ? .green : (stop.delay <= 6 ? .orange : .red))
+                            }
+                            else if let est = stop.estimatedTime {
+                                Text("Previsto: \(est)")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .bold()
                             }
                         }
-                        .listRowBackground(stop.stationName.lowercased().contains("magenta") ? Color.orange.opacity(0.1) : Color.clear)
+                        Spacer()
+                        
+                        if stop.actualTime == nil && stop.estimatedTime != nil {
+                            Text(stop.time)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .strikethrough()
+                        } else {
+                            Text(stop.time).font(.subheadline).foregroundColor(.secondary)
+                        }
                     }
+                    .listRowBackground(stop.stationName.lowercased().contains("magenta") ? Color.orange.opacity(0.1) : Color.clear)
                 }
             }
-            .navigationTitle("Treno \(train.number)")
-            .toolbar {
+        }
+        .navigationTitle("Treno \(train.number)")
+        .toolbar {
+            if showCloseButton {
                 ToolbarItem(placement: .topBarLeading) { Button("Chiudi") { dismiss() } }
-                ToolbarItem(placement: .topBarTrailing) {
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
                         let isActive = manager.activeLiveActivities.contains(train.number)
                         Button {
@@ -98,15 +100,13 @@ struct TrainStopsView: View {
                             Image(systemName: "arrow.clockwise")
                         }
                         .disabled(manager.isStopsLoading)
-                    }
+                }
                 }
             }
-            .task { await manager.fetchStops(for: train) }
-        }
+        .task { await manager.fetchStops(for: train) }
     }
 
     func startLiveActivity(train: Train) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         
         let existingActivity = Activity<TrainLiveActivityAttributes>.activities.first { activity in
             activity.attributes.trainNumber == train.number
@@ -148,4 +148,3 @@ struct TrainStopsView: View {
         }
     }
 }
-

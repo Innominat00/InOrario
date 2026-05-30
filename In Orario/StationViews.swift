@@ -194,7 +194,7 @@ struct StationBoardView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $selectedTrain) { t in TrainStopsView(train: t) }
+        .sheet(item: $selectedTrain) { t in NavigationStack { TrainStopsView(train: t) } }
         .onAppear { manager.startAutoRefresh(for: station.rfiID ?? "", isDepartures: showingDepartures) }
         .onDisappear { manager.stopAutoRefresh() }
         .onReceive(timer) { input in self.currentTime = input }
@@ -279,7 +279,7 @@ struct VTStationBoardView: View {
                 }
             }
         }
-        .sheet(item: $selectedTrain) { t in TrainStopsView(train: t) }
+        .sheet(item: $selectedTrain) { t in NavigationStack { TrainStopsView(train: t) } }
         .onAppear { manager.loadFavorites() }
         .task(id: showingDepartures) { await manager.fetchVTTrains(for: vtID, isDepartures: showingDepartures) }
     }

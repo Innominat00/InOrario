@@ -17,12 +17,16 @@ struct NewsItem: Codable, Identifiable {
 }
 
 struct SharedFormatters {
-    static let time: DateFormatter = {
+    nonisolated static var time: DateFormatter {
+        if let formatter = Thread.current.threadDictionary["timeFormatter"] as? DateFormatter {
+            return formatter
+        }
         let f = DateFormatter()
         f.dateFormat = "HH:mm"
         f.timeZone = TimeZone(identifier: "Europe/Rome")
+        Thread.current.threadDictionary["timeFormatter"] = f
         return f
-    }()
+    }
 }
 
 enum DayType: String, Codable {
@@ -134,7 +138,18 @@ struct VTSearchStation: Codable, Identifiable {
     }
 }
 
-struct Train: Identifiable {
+struct TrenitaliaLocation: Codable, Identifiable {
+    var id: Int
+    let name: String
+    let displayName: String
+}
+
+struct RFIStation: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+}
+
+struct Train: Identifiable, Sendable {
     let id = UUID()
     let category: String
     let number: String
@@ -153,7 +168,7 @@ struct Train: Identifiable {
     }
 }
 
-struct TrainStatus {
+struct TrainStatus: Sendable {
     var lastStation: String = "--"
     var lastTime: String = "--"
     var statusMessage: String = "In attesa di dati..."
@@ -161,7 +176,7 @@ struct TrainStatus {
     var cancellationNote: String? = nil
 }
 
-struct Stop: Identifiable {
+struct Stop: Identifiable, Sendable {
     let id = UUID()
     let stationName: String
     let time: String
@@ -231,9 +246,61 @@ struct Station: Identifiable, Codable, Hashable {
 }
 
 enum AppSection: String, Codable, CaseIterable {
-    case nearby = "Stazione Vicina"
-    case favoriteTrains = "Treni Preferiti"
     case myStations = "Le Mie Stazioni"
+    case favoriteTrains = "I miei Treni"
     case passante = "Passante Ferroviario"
 }
 
+struct TravelSegment: Identifiable, Sendable {
+    let id = UUID()
+    var origin: String
+    var destination: String
+    let departureTime: String
+    let arrivalTime: String
+    var trainNumber: String
+    var trainCategory: String
+}
+
+struct TravelSolution: Identifiable, Sendable {
+    let id = UUID()
+    let trainNumber: String
+    let category: String
+    let departureTime: String
+    let arrivalTime: String
+    let origin: String
+    let destination: String
+    let duration: String
+    var segments: [TravelSegment]
+}
+
+struct FavoriteRoute: Codable, Identifiable, Equatable {
+    var id: String { "\(originID)-\(destinationID)" }
+    let originName: String
+    let originID: String
+    let destinationName: String
+    let destinationID: String
+}
+
+struct SavedTripSegment: Codable, Equatable {
+    let origin: String
+    let destination: String
+    let departureTime: String
+    let arrivalTime: String
+    let trainNumber: String
+    let trainCategory: String
+}
+
+struct SavedTrip: Codable, Identifiable, Equatable {
+    let id: String // Can be a composite of origin, dest, departureTime
+    let origin: String
+    let destination: String
+    let departureTime: String
+    let arrivalTime: String
+    let duration: String
+    let segments: [SavedTripSegment]
+    
+    var asTravelSolution: TravelSolution {
+        let mappedSegments = segments.map { TravelSegment(origin: $0.origin, destination: $0.destination, departureTime: $0.departureTime, arrivalTime: $0.arrivalTime, trainNumber: $0.trainNumber, trainCategory: $0.trainCategory) }
+        return TravelSolution(trainNumber: "", category: "Viaggio", departureTime: departureTime, arrivalTime: arrivalTime, origin: origin, destination: destination, duration: duration, segments: mappedSegments)
+    }
+}
