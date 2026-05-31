@@ -560,31 +560,99 @@
         /* ============================================
            STATS BAR
            ============================================ */
-        .stats {
-            padding: 48px 0;
+        /* ============================================
+           TECH TICKER
+           ============================================ */
+        .tech-ticker {
+            padding: 0;
             border-top: 1px solid var(--border-primary);
             border-bottom: 1px solid var(--border-primary);
             background: var(--bg-secondary);
+            overflow: hidden;
+            position: relative;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 32px;
-            text-align: center;
+        .tech-ticker::before,
+        .tech-ticker::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 120px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .tech-ticker::before {
+            left: 0;
+            background: linear-gradient(to right, var(--bg-secondary), transparent);
+        }
+        .tech-ticker::after {
+            right: 0;
+            background: linear-gradient(to left, var(--bg-secondary), transparent);
         }
 
-        .stat-item h3 {
-            font-size: 36px;
-            font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 4px;
+        .ticker-track {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            padding: 20px 0;
+            white-space: nowrap;
+            animation: ticker-scroll 40s linear infinite;
+            width: max-content;
         }
 
-        .stat-item p {
+        @keyframes ticker-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-track:hover { animation-play-state: paused; }
+
+        .tech-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            margin: 0 10px;
+            border-radius: var(--radius-full);
             font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 500;
+            font-weight: 600;
+            border: 1px solid;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .tech-badge:hover { transform: scale(1.05); }
+
+        .tech-badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .tb-orange  { color: var(--accent-orange);  border-color: rgba(255,159,10,0.25);  background: rgba(255,159,10,0.08); }
+        .tb-orange  .tech-badge-dot { background: var(--accent-orange); }
+        .tb-blue    { color: var(--accent-blue);    border-color: rgba(10,132,255,0.25);   background: rgba(10,132,255,0.08); }
+        .tb-blue    .tech-badge-dot { background: var(--accent-blue); }
+        .tb-green   { color: var(--accent-green);   border-color: rgba(48,209,88,0.25);    background: rgba(48,209,88,0.08); }
+        .tb-green   .tech-badge-dot { background: var(--accent-green); }
+        .tb-purple  { color: var(--accent-purple);  border-color: rgba(191,90,242,0.25);   background: rgba(191,90,242,0.08); }
+        .tb-purple  .tech-badge-dot { background: var(--accent-purple); }
+        .tb-teal    { color: var(--accent-teal);    border-color: rgba(100,210,255,0.25);  background: rgba(100,210,255,0.08); }
+        .tb-teal    .tech-badge-dot { background: var(--accent-teal); }
+        .tb-yellow  { color: var(--accent-yellow);  border-color: rgba(255,214,10,0.25);   background: rgba(255,214,10,0.08); }
+        .tb-yellow  .tech-badge-dot { background: var(--accent-yellow); }
+        .tb-tf      { color: var(--accent-testflight); border-color: rgba(10,212,139,0.25); background: rgba(10,212,139,0.08); }
+        .tb-tf      .tech-badge-dot { background: var(--accent-testflight); }
+        .tb-red     { color: var(--accent-red);     border-color: rgba(255,69,58,0.25);    background: rgba(255,69,58,0.08); }
+        .tb-red     .tech-badge-dot { background: var(--accent-red); }
+
+        .ticker-separator {
+            color: var(--text-tertiary);
+            font-size: 18px;
+            margin: 0 6px;
+            flex-shrink: 0;
+            user-select: none;
         }
 
         /* ============================================
@@ -1601,28 +1669,72 @@
     </section>
 
     <!-- ============================================
-         STATS
+         TECH TICKER
          ============================================ -->
-    <section class="stats">
-        <div class="container">
-            <div class="stats-grid">
-                <div class="stat-item reveal">
-                    <h3 style="color: var(--accent-orange)">18+</h3>
-                    <p>Stazioni monitorate</p>
-                </div>
-                <div class="stat-item reveal reveal-delay-1">
-                    <h3 style="color: var(--accent-blue)">5</h3>
-                    <p>Linee metro integrate</p>
-                </div>
-                <div class="stat-item reveal reveal-delay-2">
-                    <h3 style="color: var(--accent-green)">45s</h3>
-                    <p>Aggiornamento automatico</p>
-                </div>
-                <div class="stat-item reveal reveal-delay-3">
-                    <h3 style="color: var(--accent-purple)">3</h3>
-                    <p>Fonti dati in tempo reale</p>
-                </div>
-            </div>
+    <section class="tech-ticker" aria-label="Tecnologie utilizzate">
+        <div class="ticker-track">
+            <!-- Set 1 -->
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>SwiftUI</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>WidgetKit</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>Dynamic Island</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Core Location</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>ActivityKit</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>Lock Screen Widget</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>Geofencing</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>URLSession</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-tf"><span class="tech-badge-dot"></span>Open Source</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>Live Activities</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Trenord API</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-red"><span class="tech-badge-dot"></span>ATM Metro</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>Swift Concurrency</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>UserDefaults</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>iOS 17+</span>
+            <span class="ticker-separator">·</span>
+            <!-- Set 2 (duplicato per loop continuo) -->
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>SwiftUI</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>WidgetKit</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>Dynamic Island</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Core Location</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>ActivityKit</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>Lock Screen Widget</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>Geofencing</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>URLSession</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-tf"><span class="tech-badge-dot"></span>Open Source</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>Live Activities</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Trenord API</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-red"><span class="tech-badge-dot"></span>ATM Metro</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>Swift Concurrency</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>UserDefaults</span>
+            <span class="ticker-separator">·</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>iOS 17+</span>
+            <span class="ticker-separator">·</span>
         </div>
     </section>
 
