@@ -965,90 +965,363 @@
             height: 400px;
             background: radial-gradient(ellipse, rgba(255, 159, 10, 0.04) 0%, transparent 70%);
             pointer-events: none;
-        }
-
-        .passante-full {
-            margin-top: 48px;
+        }        /* ============================================
+           ONBOARDING / PASSANTE CONFIGURATOR CSS
+           ============================================ */
+        .onboarding-container {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 32px;
             background: var(--bg-card);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
-            padding: 40px 32px;
-            overflow-x: auto;
+            padding: 32px;
+            margin-top: 32px;
         }
 
-        .passante-full-track {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 0;
-            min-width: fit-content;
-            padding: 40px 0 60px;
+        @media (max-width: 1024px) {
+            .onboarding-container {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
         }
 
-        .pf-node {
+        .config-panel {
             display: flex;
             flex-direction: column;
+            gap: 20px;
+        }
+
+        .config-panel h3 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .panel-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .s-line-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .line-toggle-btn {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-primary);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .line-toggle-btn span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
             flex-shrink: 0;
+        }
+
+        /* Active buttons styled with their actual official line color */
+        .line-toggle-btn.active {
+            color: #fff;
+            transform: scale(1.03);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        /* Set specific official color rules for line selector buttons */
+        .btn-s1  span { background: #e30613; }
+        .btn-s1.active  { background: #e30613; border-color: #e30613; box-shadow: 0 0 12px rgba(227, 6, 19, 0.4); }
+        
+        .btn-s2  span { background: #009640; }
+        .btn-s2.active  { background: #009640; border-color: #009640; box-shadow: 0 0 12px rgba(0, 150, 64, 0.4); }
+        
+        .btn-s3  span { background: #a61a30; }
+        .btn-s3.active  { background: #a61a30; border-color: #a61a30; box-shadow: 0 0 12px rgba(166, 26, 48, 0.4); }
+        
+        .btn-s4  span { background: #8ec06c; }
+        .btn-s4.active  { background: #8ec06c; border-color: #8ec06c; box-shadow: 0 0 12px rgba(142, 192, 108, 0.4); }
+        
+        .btn-s5  span { background: #f39200; }
+        .btn-s5.active  { background: #f39200; border-color: #f39200; box-shadow: 0 0 12px rgba(243, 146, 0, 0.4); }
+        
+        .btn-s6  span { background: #ffd60a; }
+        .btn-s6.active  { background: #ffd60a; border-color: #ffd60a; color: #000; box-shadow: 0 0 12px rgba(255, 214, 10, 0.4); }
+        
+        .btn-s7  span { background: #ec008c; }
+        .btn-s7.active  { background: #ec008c; border-color: #ec008c; box-shadow: 0 0 12px rgba(236, 0, 140, 0.4); }
+        
+        .btn-s8  span { background: #fbc5b0; }
+        .btn-s8.active  { background: #fbc5b0; border-color: #fbc5b0; color: #000; box-shadow: 0 0 12px rgba(251, 197, 176, 0.4); }
+        
+        .btn-s9  span { background: #7e1f7c; }
+        .btn-s9.active  { background: #7e1f7c; border-color: #7e1f7c; box-shadow: 0 0 12px rgba(126, 31, 124, 0.4); }
+        
+        .btn-s11 span { background: #8a8bbf; }
+        .btn-s11.active { background: #8a8bbf; border-color: #8a8bbf; box-shadow: 0 0 12px rgba(138, 139, 191, 0.4); }
+        
+        .btn-s12 span { background: #005a2b; }
+        .btn-s12.active { background: #005a2b; border-color: #005a2b; box-shadow: 0 0 12px rgba(0, 90, 43, 0.4); }
+        
+        .btn-s13 span { background: #a37a3e; }
+        .btn-s13.active { background: #a37a3e; border-color: #a37a3e; box-shadow: 0 0 12px rgba(163, 122, 62, 0.4); }
+        
+        .btn-s19 span { background: #5a0f2b; }
+        .btn-s19.active { background: #5a0f2b; border-color: #5a0f2b; box-shadow: 0 0 12px rgba(90, 15, 43, 0.4); }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-preset {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            text-align: left;
         }
-        .pf-node:hover { transform: translateY(-4px); }
-
-        .pf-dot {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--accent-orange);
-            border: 3px solid var(--bg-card);
-            box-shadow: 0 0 0 2px var(--accent-orange);
-            z-index: 2;
-            transition: all 0.2s;
+        .btn-preset:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--border-hover);
         }
 
-        .pf-node:hover .pf-dot {
-            transform: scale(1.3);
-            box-shadow: 0 0 0 2px var(--accent-orange), 0 0 20px rgba(255, 159, 10, 0.4);
-        }
-
-        .pf-name {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-align: center;
-            max-width: 80px;
-            line-height: 1.3;
-            transition: color 0.2s;
-        }
-        .pf-node:hover .pf-name { color: var(--accent-orange); }
-
-        .pf-metros {
-            display: flex;
-            gap: 4px;
-        }
-
-        .pf-metro-badge {
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
+        .visual-panel {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
-            font-weight: 900;
-            color: #fff;
+            overflow: hidden;
+            border-radius: var(--radius-md);
+            background: #060609;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 16px;
         }
 
-        .pf-connector {
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent-orange), rgba(255, 159, 10, 0.5));
-            align-self: center;
-            margin-top: 8px;
-            flex-shrink: 0;
-            border-radius: 2px;
+        .map-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
+        .suburban-map {
+            width: 100%;
+            height: auto;
+            max-height: 480px;
+        }
+
+        /* SVG Map styles */
+        .map-bg-path {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.03);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .map-active-path {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.06;
+            transition: opacity 0.3s ease, stroke-dashoffset 0.8s ease;
+        }
+
+        .map-active-path.active {
+            opacity: 1;
+            filter: drop-shadow(0 0 2px var(--shadow-color, rgba(255,255,255,0.4)));
+        }
+
+        .map-station {
+            transition: opacity 0.3s ease;
+        }
+
+        .map-station circle {
+            fill: #0c0c10;
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 1.5;
+            transition: all 0.3s ease;
+        }
+
+        .map-station.active circle {
+            fill: var(--accent-orange);
+            stroke: #ffffff;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 6px var(--accent-orange));
+        }
+
+        .map-station text {
+            fill: var(--text-secondary);
+            font-size: 9px;
+            font-weight: 700;
+            font-family: 'Inter', -apple-system, sans-serif;
+            transition: fill 0.3s ease, font-size 0.2s;
+            pointer-events: none;
+        }
+
+        .map-station.active text {
+            fill: var(--text-primary);
+            font-size: 9.5px;
+        }
+
+        .map-station.inactive {
+            opacity: 0.2;
+        }
+
+        .map-station-name-bg {
+            fill: #060609;
+            opacity: 0.75;
+            pointer-events: none;
+        }
+
+        /* Metro badge container inside SVG */
+        .map-metro-group {
+            pointer-events: none;
+        }
+        .map-metro-badge {
+            rx: 2;
+            ry: 2;
+        }
+        .map-metro-text {
+            fill: #fff;
+            font-size: 7.5px;
+            font-weight: 900;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        /* Mock iPhone Live Dashboard CSS */
+        .dashboard-preview-card {
+            margin-top: 24px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0.03) 100%);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            padding: 24px;
+        }
+
+        .dashboard-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-primary);
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+
+        .dashboard-header-left h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dashboard-header-left p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .train-row {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.25s ease;
+        }
+
+        .train-row:hover {
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .train-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .train-badge-pill {
+            min-width: 42px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .train-details h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .train-details p {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .train-right {
+            text-align: right;
+        }
+
+        .train-time {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .train-delay {
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .delay-green { color: var(--accent-green); }
+        .delay-orange { color: var(--accent-orange); }
+        .delay-red { color: var(--accent-red); }
+
+        .no-selection-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        } }
 
         /* ============================================
            SEARCH & TRAVEL PLANNER
@@ -1488,11 +1761,6 @@
                 grid-column: span 12;
             }
 
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 24px;
-            }
-
             .hero h1 { letter-spacing: -2px; }
             .hero-floating { display: none; }
 
@@ -1669,71 +1937,39 @@
     </section>
 
     <!-- ============================================
-         TECH TICKER
+         TECH TICKER (COVERAGE & FEATURES)
          ============================================ -->
-    <section class="tech-ticker" aria-label="Tecnologie utilizzate">
+    <section class="tech-ticker" aria-label="Copertura e servizi dell'applicazione">
         <div class="ticker-track">
             <!-- Set 1 -->
-            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>SwiftUI</span>
+            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>🇮🇹 Tutta Italia: Trenitalia & Ferrovienord</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>WidgetKit</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>🚅 Alta Velocità: Frecciarossa & Italo</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>Dynamic Island</span>
+            <span class="tech-badge tb-red"><span class="tech-badge-dot"></span>📢 Alert Scioperi & Guasti Improvvisi</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Core Location</span>
+            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>🚇 Metro ATM Milano: Attese in tempo reale</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>ActivityKit</span>
+            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>🟢 Passante Ferroviario: Sezione Linee S</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>Lock Screen Widget</span>
+            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>⏱️ Orari & Binari ufficiali al secondo</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>Geofencing</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>URLSession</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-tf"><span class="tech-badge-dot"></span>Open Source</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>Live Activities</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Trenord API</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-red"><span class="tech-badge-dot"></span>ATM Metro</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>Swift Concurrency</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>UserDefaults</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>iOS 17+</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>🚉 Oltre 2.000 stazioni supportate</span>
             <span class="ticker-separator">·</span>
             <!-- Set 2 (duplicato per loop continuo) -->
-            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>SwiftUI</span>
+            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>🇮🇹 Tutta Italia: Trenitalia & Ferrovienord</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>WidgetKit</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>🚅 Alta Velocità: Frecciarossa & Italo</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>Dynamic Island</span>
+            <span class="tech-badge tb-red"><span class="tech-badge-dot"></span>📢 Alert Scioperi & Guasti Improvvisi</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Core Location</span>
+            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>🚇 Metro ATM Milano: Attese in tempo reale</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>ActivityKit</span>
+            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>🟢 Passante Ferroviario: Sezione Linee S</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>Lock Screen Widget</span>
+            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>⏱️ Orari & Binari ufficiali al secondo</span>
             <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>Geofencing</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-blue"><span class="tech-badge-dot"></span>URLSession</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-tf"><span class="tech-badge-dot"></span>Open Source</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-purple"><span class="tech-badge-dot"></span>Live Activities</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-green"><span class="tech-badge-dot"></span>Trenord API</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-red"><span class="tech-badge-dot"></span>ATM Metro</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-teal"><span class="tech-badge-dot"></span>Swift Concurrency</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-yellow"><span class="tech-badge-dot"></span>UserDefaults</span>
-            <span class="ticker-separator">·</span>
-            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>iOS 17+</span>
+            <span class="tech-badge tb-orange"><span class="tech-badge-dot"></span>🚉 Oltre 2.000 stazioni supportate</span>
             <span class="ticker-separator">·</span>
         </div>
     </section>
@@ -1958,92 +2194,329 @@
         <div class="container">
             <div class="features-header reveal" style="text-align: center;">
                 <div class="section-eyebrow" style="color: var(--accent-orange);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
-                    Mappa Interattiva
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    Configuratore Onboarding
                 </div>
-                <h2 class="section-title">Il Passante Ferroviario</h2>
-                <p class="section-subtitle" style="margin: 0 auto;">Mappa visuale delle 9 stazioni del tunnel urbano di Milano con interscambi metro. Tocca una stazione per vedere le partenze in tempo reale.</p>
+                <h2 class="section-title">Personalizza la tua Dashboard</h2>
+                <p class="section-subtitle" style="margin: 0 auto 24px;">Durante il primo avvio dell'app puoi scegliere quali stazioni e linee suburbane utilizzi di più. Provalo qui sotto e guarda come si adatta all'istante lo schema del tuo passante!</p>
             </div>
 
-            <div class="passante-full reveal">
-                <div class="passante-full-track">
-                    <!-- Certosa -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">Certosa</div>
+            <div class="onboarding-container reveal">
+                <!-- Panel 1: S-Line controls -->
+                <div class="config-panel">
+                    <h3>1. Seleziona le tue Linee Suburbane</h3>
+                    <p class="panel-desc">Scegli le linee Suburbane (S) che utilizzi di solito. "In Orario" si adatterà istantaneamente durante l'onboarding per mostrarti solo le informazioni e le stazioni rilevanti per te.</p>
+                    
+                    <div class="s-line-selector-grid">
+                        <button class="line-toggle-btn btn-s1 active" onclick="toggleLine('S1')"><span></span>S1</button>
+                        <button class="line-toggle-btn btn-s2" onclick="toggleLine('S2')"><span></span>S2</button>
+                        <button class="line-toggle-btn btn-s3" onclick="toggleLine('S3')"><span></span>S3</button>
+                        <button class="line-toggle-btn btn-s4" onclick="toggleLine('S4')"><span></span>S4</button>
+                        <button class="line-toggle-btn btn-s5 active" onclick="toggleLine('S5')"><span></span>S5</button>
+                        <button class="line-toggle-btn btn-s6 active" onclick="toggleLine('S6')"><span></span>S6</button>
+                        <button class="line-toggle-btn btn-s7" onclick="toggleLine('S7')"><span></span>S7</button>
+                        <button class="line-toggle-btn btn-s8" onclick="toggleLine('S8')"><span></span>S8</button>
+                        <button class="line-toggle-btn btn-s9" onclick="toggleLine('S9')"><span></span>S9</button>
+                        <button class="line-toggle-btn btn-s11" onclick="toggleLine('S11')"><span></span>S11</button>
+                        <button class="line-toggle-btn btn-s12" onclick="toggleLine('S12')"><span></span>S12</button>
+                        <button class="line-toggle-btn btn-s13" onclick="toggleLine('S13')"><span></span>S13</button>
+                        <button class="line-toggle-btn btn-s19" onclick="toggleLine('S19')"><span></span>S19</button>
                     </div>
-                    <div class="pf-connector"></div>
 
-                    <!-- Villapizzone -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">Villapizzone</div>
+                    <div class="preset-buttons">
+                        <button class="btn-preset" onclick="selectPreset('passante')">🚇 Passante Centrale (S1, S2, S5, S6, S12, S13)</button>
+                        <button class="btn-preset" onclick="selectPreset('cadorna')">🏰 Ramo Cadorna (S3, S4)</button>
+                        <button class="btn-preset" onclick="selectPreset('cintura')">🔁 Cintura Est-Sud (S9, S19)</button>
+                        <button class="btn-preset" onclick="resetOnboarding()" style="text-align: center; color: var(--accent-red); font-weight:700;">Azzera Configurazione</button>
                     </div>
-                    <div class="pf-connector"></div>
+                </div>
 
-                    <!-- Lancetti -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">Lancetti</div>
-                    </div>
-                    <div class="pf-connector"></div>
+                <!-- Panel 2: Interactive SVG Network Map -->
+                <div class="visual-panel">
+                    <div class="map-container">
+                        <svg viewBox="0 0 850 500" class="suburban-map" id="map-svg">
+                            <!-- DEFINITIONS FOR GLOW EFFECTS -->
+                            <defs>
+                                <filter id="glow-s1" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                            </defs>
 
-                    <!-- P. Garibaldi -->
-                    <div class="pf-node">
-                        <div class="pf-dot active"></div>
-                        <div class="pf-name" style="color: var(--accent-orange);">P. Garibaldi</div>
-                        <div class="pf-metros">
-                            <div class="pf-metro-badge" style="background:#009a4e;">M2</div>
-                            <div class="pf-metro-badge" style="background:#bf5af2;">M5</div>
-                        </div>
-                    </div>
-                    <div class="pf-connector"></div>
+                            <!-- BACKGROUND CONNECTOR LINES (Faded grid) -->
+                            <g class="map-bg-lines">
+                                <path d="M 100 120 L 240 160 M 220 40 L 240 160 M 320 40 L 240 160" class="map-bg-path" /> <!-- West outer branches to Bovisa -->
+                                <path d="M 240 160 L 240 240 L 240 320" class="map-bg-path" /> <!-- Bovisa -> Domodossola -> Cadorna -->
+                                <path d="M 100 80 L 170 80 L 320 180" class="map-bg-path" /> <!-- Certosa -> Villapizzone -> Lancetti -->
+                                <path d="M 240 160 L 320 180" class="map-bg-path" /> <!-- Bovisa -> Lancetti -->
+                                <path d="M 320 180 L 410 180 L 480 210 L 550 240 L 620 270 L 690 300" class="map-bg-path" /> <!-- Tunnel central -->
+                                <path d="M 690 300 L 760 260 L 820 260" class="map-bg-path" /> <!-- Vittoria -> Forlanini -> Treviglio -->
+                                <path d="M 690 300 L 760 360 L 760 410 L 760 470" class="map-bg-path" /> <!-- Vittoria -> Rogoredo -> Melegnano -> Lodi/Pavia -->
+                                <path d="M 410 20 L 410 50 L 410 80 L 410 180" class="map-bg-path" /> <!-- Monza -> Sesto -> Greco -> Garibaldi -->
+                                <path d="M 410 80 L 580 100 L 760 260 L 600 360 L 500 410 L 400 410 L 300 410 L 200 410" class="map-bg-path" /> <!-- S9 belt -->
+                            </g>
 
-                    <!-- Repubblica -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">Repubblica</div>
-                        <div class="pf-metros">
-                            <div class="pf-metro-badge" style="background:#f5a623;">M3</div>
-                        </div>
-                    </div>
-                    <div class="pf-connector"></div>
+                            <!-- COLORED DYNAMIC ACTIVE PATHS -->
+                            <g class="map-active-lines">
+                                <!-- S1: Red -->
+                                <path id="line-S1" class="map-active-path" d="M 100 120 L 240 160 L 320 180 L 410 180 L 480 210 L 550 240 L 620 270 L 690 300 L 760 360 L 760 470" stroke="#e30613" style="--shadow-color: rgba(227, 6, 19, 0.4);" />
+                                <!-- S2: Green -->
+                                <path id="line-S2" class="map-active-path" d="M 220 40 L 240 160 L 320 180 L 410 180 L 480 210 L 550 240 L 620 270 L 690 300 L 760 360" stroke="#009640" style="--shadow-color: rgba(0, 150, 64, 0.4);" />
+                                <!-- S3: Crimson -->
+                                <path id="line-S3" class="map-active-path" d="M 100 120 L 240 160 L 240 240 L 240 320" stroke="#a61a30" style="--shadow-color: rgba(166, 26, 48, 0.4);" />
+                                <!-- S4: Light Green -->
+                                <path id="line-S4" class="map-active-path" d="M 320 40 L 240 160 L 240 240 L 240 320" stroke="#8ec06c" style="--shadow-color: rgba(142, 192, 108, 0.4);" />
+                                <!-- S5: Ochre -->
+                                <path id="line-S5" class="map-active-path active" d="M 100 80 L 170 80 L 320 180 L 410 180 L 480 210 L 550 240 L 620 270 L 690 300 L 760 260 L 820 260" stroke="#f39200" style="--shadow-color: rgba(243, 146, 0, 0.4);" />
+                                <!-- S6: Yellow -->
+                                <path id="line-S6" class="map-active-path active" d="M 100 80 L 170 80 L 320 180 L 410 180 L 480 210 L 550 240 L 620 270 L 690 300 L 760 260 L 820 260" stroke="#ffd60a" style="--shadow-color: rgba(255, 214, 10, 0.4);" />
+                                <!-- S7: Fuchsia -->
+                                <path id="line-S7" class="map-active-path" d="M 410 20 L 410 50 L 410 80 L 410 180" stroke="#ec008c" style="--shadow-color: rgba(236, 0, 140, 0.4);" />
+                                <!-- S8: Salmon -->
+                                <path id="line-S8" class="map-active-path" d="M 410 20 L 410 50 L 410 80 L 410 180" stroke="#fbc5b0" style="--shadow-color: rgba(251, 197, 176, 0.4);" />
+                                <!-- S9: Violet -->
+                                <path id="line-S9" class="map-active-path" d="M 100 120 L 410 20 L 410 50 L 410 80 L 580 100 L 760 260 L 600 360 L 500 410 L 400 410 L 300 410 L 200 410" stroke="#7e1f7c" style="--shadow-color: rgba(126, 31, 124, 0.4);" />
+                                <!-- S11: Periwinkle -->
+                                <path id="line-S11" class="map-active-path" d="M 410 20 L 410 50 L 410 80 L 410 180 L 170 80 L 100 80" stroke="#8a8bbf" style="--shadow-color: rgba(138, 139, 191, 0.4);" />
+                                <!-- S12: Dark Green -->
+                                <path id="line-S12" class="map-active-path" d="M 240 160 L 320 180 L 410 180 L 480 210 L 550 240 L 620 270 L 690 300 L 760 360 L 760 410" stroke="#005a2b" style="--shadow-color: rgba(0, 90, 43, 0.4);" />
+                                <!-- S13: Bronze -->
+                                <path id="line-S13" class="map-active-path" d="M 240 160 L 320 180 L 410 180 L 480 210 L 550 240 L 620 270 L 690 300 L 760 360 L 760 470" stroke="#a37a3e" style="--shadow-color: rgba(163, 122, 62, 0.4);" />
+                                <!-- S19: Plum -->
+                                <path id="line-S19" class="map-active-path" d="M 760 360 L 600 360 L 500 410 L 400 410 L 300 410 L 200 410" stroke="#5a0f2b" style="--shadow-color: rgba(90, 15, 43, 0.4);" />
+                            </g>
 
-                    <!-- Porta Venezia -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">P. Venezia</div>
-                        <div class="pf-metros">
-                            <div class="pf-metro-badge" style="background:#e4002b;">M1</div>
-                        </div>
-                    </div>
-                    <div class="pf-connector"></div>
+                            <!-- STATIONS NODES -->
+                            <!-- Certosa -->
+                            <g class="map-station active" id="station-certosa" onclick="clickStation('certosa')">
+                                <circle cx="100" cy="80" r="6" />
+                                <text x="100" y="70" text-anchor="middle">Certosa</text>
+                            </g>
 
-                    <!-- Dateo -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">Dateo</div>
-                        <div class="pf-metros">
-                            <div class="pf-metro-badge" style="background:#0a84ff;">M4</div>
-                        </div>
-                    </div>
-                    <div class="pf-connector"></div>
+                            <!-- Villapizzone -->
+                            <g class="map-station active" id="station-villapizzone" onclick="clickStation('villapizzone')">
+                                <circle cx="170" cy="80" r="6" />
+                                <text x="170" y="70" text-anchor="middle">Villapizzone</text>
+                            </g>
 
-                    <!-- Porta Vittoria -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">P. Vittoria</div>
-                    </div>
-                    <div class="pf-connector"></div>
+                            <!-- Saronno -->
+                            <g class="map-station" id="station-saronno" onclick="clickStation('saronno')">
+                                <circle cx="100" cy="120" r="6" />
+                                <text x="90" y="123" text-anchor="end">Saronno</text>
+                            </g>
 
-                    <!-- Forlanini -->
-                    <div class="pf-node">
-                        <div class="pf-dot"></div>
-                        <div class="pf-name">Forlanini</div>
-                        <div class="pf-metros">
-                            <div class="pf-metro-badge" style="background:#0a84ff;">M4</div>
-                        </div>
+                            <!-- Bovisa -->
+                            <g class="map-station" id="station-bovisa" onclick="clickStation('bovisa')">
+                                <circle cx="240" cy="160" r="7" />
+                                <rect class="map-station-name-bg" x="180" y="145" width="50" height="12" />
+                                <text x="230" y="154" text-anchor="end">Milano Bovisa</text>
+                            </g>
+
+                            <!-- Domodossola -->
+                            <g class="map-station" id="station-domodossola" onclick="clickStation('domodossola')">
+                                <circle cx="240" cy="240" r="6" />
+                                <text x="230" y="244" text-anchor="end">Domodossola</text>
+                            </g>
+
+                            <!-- Cadorna -->
+                            <g class="map-station" id="station-cadorna" onclick="clickStation('cadorna')">
+                                <circle cx="240" cy="320" r="7" />
+                                <rect class="map-station-name-bg" x="175" y="325" width="60" height="12" />
+                                <text x="230" y="334" text-anchor="end">M. Cadorna</text>
+                                <!-- Metro transfers M1/M2 -->
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="248" y="315" width="14" height="10" fill="#e4002b" />
+                                    <text class="map-metro-text" x="255" y="321">M1</text>
+                                    <rect class="map-metro-badge" x="264" y="315" width="14" height="10" fill="#009a4e" />
+                                    <text class="map-metro-text" x="271" y="321">M2</text>
+                                </g>
+                            </g>
+
+                            <!-- Lancetti -->
+                            <g class="map-station active" id="station-lancetti" onclick="clickStation('lancetti')">
+                                <circle cx="320" cy="180" r="6" />
+                                <text x="320" y="170" text-anchor="middle">Lancetti</text>
+                            </g>
+
+                            <!-- Garibaldi -->
+                            <g class="map-station active" id="station-garibaldi" onclick="clickStation('garibaldi')">
+                                <circle cx="410" cy="180" r="8" />
+                                <rect class="map-station-name-bg" x="370" y="192" width="80" height="12" />
+                                <text x="410" y="201" text-anchor="middle" style="fill: var(--accent-orange);">P. Garibaldi</text>
+                                <!-- Metro transfers M2/M5 -->
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="394" y="163" width="14" height="10" fill="#009a4e" />
+                                    <text class="map-metro-text" x="401" y="169">M2</text>
+                                    <rect class="map-metro-badge" x="410" y="163" width="14" height="10" fill="#bf5af2" />
+                                    <text class="map-metro-text" x="417" y="169">M5</text>
+                                </g>
+                            </g>
+
+                            <!-- Repubblica -->
+                            <g class="map-station active" id="station-repubblica" onclick="clickStation('repubblica')">
+                                <circle cx="480" cy="210" r="6" />
+                                <text x="480" y="200" text-anchor="middle">Repubblica</text>
+                                <!-- Metro transfer M3 -->
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="473" y="217" width="14" height="10" fill="#f5a623" />
+                                    <text class="map-metro-text" x="480" y="223">M3</text>
+                                </g>
+                            </g>
+
+                            <!-- Venezia -->
+                            <g class="map-station active" id="station-venezia" onclick="clickStation('venezia')">
+                                <circle cx="550" cy="240" r="6" />
+                                <text x="550" y="230" text-anchor="middle">P. Venezia</text>
+                                <!-- Metro transfer M1 -->
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="543" y="247" width="14" height="10" fill="#e4002b" />
+                                    <text class="map-metro-text" x="550" y="253">M1</text>
+                                </g>
+                            </g>
+
+                            <!-- Dateo -->
+                            <g class="map-station active" id="station-dateo" onclick="clickStation('dateo')">
+                                <circle cx="620" cy="270" r="6" />
+                                <text x="620" y="260" text-anchor="middle">Dateo</text>
+                                <!-- Metro transfer M4 -->
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="613" y="277" width="14" height="10" fill="#0a84ff" />
+                                    <text class="map-metro-text" x="620" y="283">M4</text>
+                                </g>
+                            </g>
+
+                            <!-- Vittoria -->
+                            <g class="map-station active" id="station-vittoria" onclick="clickStation('vittoria')">
+                                <circle cx="690" cy="300" r="6" />
+                                <text x="690" y="290" text-anchor="middle">P. Vittoria</text>
+                            </g>
+
+                            <!-- Forlanini -->
+                            <g class="map-station active" id="station-forlanini" onclick="clickStation('forlanini')">
+                                <circle cx="760" cy="260" r="6" />
+                                <text x="760" y="250" text-anchor="middle">Forlanini</text>
+                                <!-- Metro transfer M4 -->
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="753" y="267" width="14" height="10" fill="#0a84ff" />
+                                    <text class="map-metro-text" x="760" y="273">M4</text>
+                                </g>
+                            </g>
+
+                            <!-- Rogoredo -->
+                            <g class="map-station" id="station-rogoredo" onclick="clickStation('rogoredo')">
+                                <circle cx="760" cy="360" r="7" />
+                                <rect class="map-station-name-bg" x="695" y="365" width="60" height="12" />
+                                <text x="750" y="374" text-anchor="end">Rogoredo</text>
+                                <!-- Metro transfer M3 -->
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="768" y="355" width="14" height="10" fill="#f5a623" />
+                                    <text class="map-metro-text" x="775" y="361">M3</text>
+                                </g>
+                            </g>
+
+                            <!-- Outer Branches (Lodi, Pavia, Monza, Greco, etc.) -->
+                            <!-- Mariano Comense -->
+                            <g class="map-station" id="station-mariano" onclick="clickStation('mariano')">
+                                <circle cx="220" cy="40" r="5" />
+                                <text x="210" y="44" text-anchor="end">Mariano C.</text>
+                            </g>
+                            <!-- Camnago -->
+                            <g class="map-station" id="station-camnago" onclick="clickStation('camnago')">
+                                <circle cx="320" cy="40" r="5" />
+                                <text x="330" y="44" text-anchor="start">Camnago</text>
+                            </g>
+
+                            <!-- Monza -->
+                            <g class="map-station" id="station-monza" onclick="clickStation('monza')">
+                                <circle cx="410" cy="20" r="5" />
+                                <text x="420" y="24" text-anchor="start">Monza</text>
+                            </g>
+                            <!-- Sesto S.G. -->
+                            <g class="map-station" id="station-sesto" onclick="clickStation('sesto')">
+                                <circle cx="410" cy="50" r="5" />
+                                <text x="420" y="54" text-anchor="start">Sesto S.G.</text>
+                            </g>
+                            <!-- Greco Pirelli -->
+                            <g class="map-station" id="station-greco" onclick="clickStation('greco')">
+                                <circle cx="410" cy="80" r="6" />
+                                <text x="420" y="84" text-anchor="start">Greco Pirelli</text>
+                            </g>
+
+                            <!-- Lambrate -->
+                            <g class="map-station" id="station-lambrate" onclick="clickStation('lambrate')">
+                                <circle cx="580" cy="100" r="6" />
+                                <text x="590" y="93" text-anchor="start">Lambrate</text>
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="590" y="97" width="14" height="10" fill="#009a4e" />
+                                    <text class="map-metro-text" x="597" y="103">M2</text>
+                                </g>
+                            </g>
+
+                            <!-- Porta Romana -->
+                            <g class="map-station" id="station-romana" onclick="clickStation('romana')">
+                                <circle cx="600" cy="360" r="6" />
+                                <text x="590" y="364" text-anchor="end">P. Romana</text>
+                            </g>
+                            <!-- Tibaldi -->
+                            <g class="map-station" id="station-tibaldi" onclick="clickStation('tibaldi')">
+                                <circle cx="500" cy="410" r="5" />
+                                <text x="500" y="425" text-anchor="middle">Tibaldi</text>
+                            </g>
+                            <!-- Romolo -->
+                            <g class="map-station" id="station-romolo" onclick="clickStation('romolo')">
+                                <circle cx="400" cy="410" r="6" />
+                                <text x="400" y="425" text-anchor="middle">Romolo</text>
+                                <g class="map-metro-group">
+                                    <rect class="map-metro-badge" x="393" y="395" width="14" height="10" fill="#009a4e" />
+                                    <text class="map-metro-text" x="400" y="401">M2</text>
+                                </g>
+                            </g>
+                            <!-- San Cristoforo -->
+                            <g class="map-station" id="station-cristoforo" onclick="clickStation('cristoforo')">
+                                <circle cx="300" cy="410" r="6" />
+                                <text x="300" y="425" text-anchor="middle">S. Cristoforo</text>
+                            </g>
+                            <!-- Albairate -->
+                            <g class="map-station" id="station-albairate" onclick="clickStation('albairate')">
+                                <circle cx="200" cy="410" r="5" />
+                                <text x="190" y="414" text-anchor="end">Albairate</text>
+                            </g>
+
+                            <!-- Treviglio -->
+                            <g class="map-station active" id="station-treviglio" onclick="clickStation('treviglio')">
+                                <circle cx="820" cy="260" r="5" />
+                                <text x="815" y="250" text-anchor="end">Treviglio</text>
+                            </g>
+
+                            <!-- Melegnano -->
+                            <g class="map-station" id="station-melegnano" onclick="clickStation('melegnano')">
+                                <circle cx="760" cy="410" r="5" />
+                                <text x="770" y="414" text-anchor="start">Melegnano</text>
+                            </g>
+                            <!-- Lodi/Pavia -->
+                            <g class="map-station" id="station-lodi" onclick="clickStation('lodi')">
+                                <circle cx="760" cy="470" r="5" />
+                                <text x="770" y="474" text-anchor="start">Lodi / Pavia</text>
+                            </g>
+                        </svg>
                     </div>
+                </div>
+            </div>
+
+            <!-- MOCK IPHONE PREVIEW (Dynamic Live Dashboard) -->
+            <div class="dashboard-preview-card reveal">
+                <div class="dashboard-header-flex">
+                    <div class="dashboard-header-left">
+                        <h4>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Tabellone Onboarding Live
+                        </h4>
+                        <p>Questo è il tabellone filtrato in base alle stazioni ed alle linee suburbane attive nella tua configurazione onboarding.</p>
+                    </div>
+                    <div class="dashboard-header-right" id="active-line-badges-container">
+                        <!-- Tiny active S-line badges -->
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" id="departures-board-grid">
+                    <!-- Live departures populated via JS -->
                 </div>
             </div>
         </div>
@@ -2390,18 +2863,6 @@
             });
         });
 
-        // --- Passante nodes hover glow ---
-        document.querySelectorAll('.pf-node').forEach(node => {
-            node.addEventListener('mouseenter', () => {
-                node.querySelector('.pf-dot').style.boxShadow = 
-                    '0 0 0 2px var(--accent-orange), 0 0 24px rgba(255, 159, 10, 0.5)';
-            });
-            node.addEventListener('mouseleave', () => {
-                node.querySelector('.pf-dot').style.boxShadow = 
-                    '0 0 0 2px var(--accent-orange)';
-            });
-        });
-
         // --- Search tabs interaction ---
         document.querySelectorAll('.search-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -2409,6 +2870,238 @@
                 tab.classList.add('active');
             });
         });
+
+        // ============================================
+        // ONBOARDING ENGINE & INTERACTIVE NETWORK LOGIC
+        // ============================================
+        const sLines = {
+            S1: { color: '#e30613', textColor: '#ffffff', name: 'Saronno - Lodi', stations: ['saronno', 'bovisa', 'lancetti', 'garibaldi', 'repubblica', 'venezia', 'dateo', 'vittoria', 'rogoredo', 'lodi'] },
+            S2: { color: '#009640', textColor: '#ffffff', name: 'Mariano C. - Rogoredo', stations: ['mariano', 'bovisa', 'lancetti', 'garibaldi', 'repubblica', 'venezia', 'dateo', 'vittoria', 'rogoredo'] },
+            S3: { color: '#a61a30', textColor: '#ffffff', name: 'Saronno - Cadorna', stations: ['saronno', 'bovisa', 'domodossola', 'cadorna'] },
+            S4: { color: '#8ec06c', textColor: '#000000', name: 'Camnago - Cadorna', stations: ['camnago', 'bovisa', 'domodossola', 'cadorna'] },
+            S5: { color: '#f39200', textColor: '#ffffff', name: 'Varese - Treviglio', stations: ['certosa', 'villapizzone', 'lancetti', 'garibaldi', 'repubblica', 'venezia', 'dateo', 'vittoria', 'forlanini', 'treviglio'] },
+            S6: { color: '#ffd60a', textColor: '#000000', name: 'Novara - Treviglio', stations: ['certosa', 'villapizzone', 'lancetti', 'garibaldi', 'repubblica', 'venezia', 'dateo', 'vittoria', 'forlanini', 'treviglio'] },
+            S7: { color: '#ec008c', textColor: '#ffffff', name: 'Lecco - Garibaldi (Molteno)', stations: ['monza', 'sesto', 'greco', 'garibaldi'] },
+            S8: { color: '#fbc5b0', textColor: '#000000', name: 'Lecco - Garibaldi (Carnate)', stations: ['monza', 'sesto', 'greco', 'garibaldi'] },
+            S9: { color: '#7e1f7c', textColor: '#ffffff', name: 'Saronno - Albairate', stations: ['saronno', 'monza', 'sesto', 'greco', 'lambrate', 'forlanini', 'romana', 'tibaldi', 'romolo', 'cristoforo', 'albairate'] },
+            S11: { color: '#8a8bbf', textColor: '#ffffff', name: 'Como - Rho', stations: ['monza', 'sesto', 'greco', 'garibaldi', 'villapizzone', 'certosa'] },
+            S12: { color: '#005a2b', textColor: '#ffffff', name: 'Bovisa - Melegnano', stations: ['bovisa', 'lancetti', 'garibaldi', 'repubblica', 'venezia', 'dateo', 'vittoria', 'rogoredo', 'melegnano'] },
+            S13: { color: '#a37a3e', textColor: '#ffffff', name: 'Garbagnate - Pavia', stations: ['bovisa', 'lancetti', 'garibaldi', 'repubblica', 'venezia', 'dateo', 'vittoria', 'rogoredo', 'lodi'] },
+            S19: { color: '#5a0f2b', textColor: '#ffffff', name: 'Rogoredo - Albairate', stations: ['rogoredo', 'romana', 'tibaldi', 'romolo', 'cristoforo', 'albairate'] }
+        };
+
+        const mockTrains = {
+            S1: [
+                { num: 'S1 23145', dest: 'Milano Bovisa', time: '16:04', delay: 'in orario', status: 'green', track: '2' },
+                { num: 'S1 23152', dest: 'Lodi', time: '16:15', delay: '+2 min', status: 'orange', track: '1' }
+            ],
+            S2: [
+                { num: 'S2 22214', dest: 'Milano Rogoredo', time: '16:09', delay: 'in orario', status: 'green', track: '3' },
+                { num: 'S2 22219', dest: 'Mariano Comense', time: '16:32', delay: '+6 min', status: 'orange', track: '2' }
+            ],
+            S3: [
+                { num: 'S3 21312', dest: 'Milano Cadorna', time: '16:08', delay: 'in orario', status: 'green', track: '4' },
+                { num: 'S3 21315', dest: 'Saronno', time: '16:23', delay: 'in orario', status: 'green', track: '3' }
+            ],
+            S4: [
+                { num: 'S4 21415', dest: 'Milano Cadorna', time: '16:12', delay: '+1 min', status: 'orange', track: '5' },
+                { num: 'S4 21422', dest: 'Camnago-Lentate', time: '16:42', delay: 'in orario', status: 'green', track: '6' }
+            ],
+            S5: [
+                { num: 'S5 23014', dest: 'Treviglio', time: '16:14', delay: '+3 min', status: 'orange', track: '3' },
+                { num: 'S5 23019', dest: 'Varese', time: '16:28', delay: 'in orario', status: 'green', track: '2' }
+            ],
+            S6: [
+                { num: 'S6 23055', dest: 'Milano Pioltello', time: '16:06', delay: 'in orario', status: 'green', track: '2' },
+                { num: 'S6 23060', dest: 'Novara', time: '16:21', delay: '+5 min', status: 'orange', track: '3' }
+            ],
+            S7: [
+                { num: 'S7 24712', dest: 'Milano P. Garibaldi', time: '16:18', delay: '+8 min', status: 'red', track: '1' },
+                { num: 'S7 24715', dest: 'Lecco (via Molteno)', time: '16:48', delay: 'in orario', status: 'green', track: '12' }
+            ],
+            S8: [
+                { num: 'S8 24815', dest: 'Milano P. Garibaldi', time: '16:08', delay: 'in orario', status: 'green', track: '11' },
+                { num: 'S8 24822', dest: 'Lecco (via Carnate)', time: '16:38', delay: 'in orario', status: 'green', track: '2' }
+            ],
+            S9: [
+                { num: 'S9 24912', dest: 'Saronno', time: '16:11', delay: 'in orario', status: 'green', track: '1' },
+                { num: 'S9 24915', dest: 'Albairate-Vermezzo', time: '16:26', delay: '+4 min', status: 'orange', track: '4' }
+            ],
+            S11: [
+                { num: 'S11 25014', dest: 'Milano P. Garibaldi', time: '16:02', delay: 'in orario', status: 'green', track: '13' },
+                { num: 'S11 25021', dest: 'Chiasso', time: '16:16', delay: '+2 min', status: 'orange', track: '14' }
+            ],
+            S12: [
+                { num: 'S12 22814', dest: 'Milano Bovisa', time: '16:19', delay: 'in orario', status: 'green', track: '3' },
+                { num: 'S12 22821', dest: 'Melegnano', time: '16:49', delay: 'in orario', status: 'green', track: '1' }
+            ],
+            S13: [
+                { num: 'S13 23133', dest: 'Milano Bovisa', time: '16:09', delay: 'in orario', status: 'green', track: '2' },
+                { num: 'S13 23136', dest: 'Pavia', time: '16:24', delay: 'in orario', status: 'green', track: '1' }
+            ],
+            S19: [
+                { num: 'S19 22915', dest: 'Milano Rogoredo', time: '16:05', delay: 'in orario', status: 'green', track: '1' },
+                { num: 'S19 22922', dest: 'Albairate-Vermezzo', time: '16:35', delay: '+3 min', status: 'orange', track: '2' }
+            ]
+        };
+
+        // Preloaded onboarding lines (defaults)
+        let activeLines = new Set(['S1', 'S5', 'S6']);
+
+        function toggleLine(lineId) {
+            if (activeLines.has(lineId)) {
+                activeLines.delete(lineId);
+                document.querySelector(`.btn-${lineId.toLowerCase()}`).classList.remove('active');
+            } else {
+                activeLines.add(lineId);
+                document.querySelector(`.btn-${lineId.toLowerCase()}`).classList.add('active');
+            }
+            updateNetwork();
+        }
+
+        function selectPreset(presetName) {
+            activeLines.clear();
+            document.querySelectorAll('.line-toggle-btn').forEach(btn => btn.classList.remove('active'));
+
+            let linesToSelect = [];
+            if (presetName === 'passante') {
+                linesToSelect = ['S1', 'S2', 'S5', 'S6', 'S12', 'S13'];
+            } else if (presetName === 'cadorna') {
+                linesToSelect = ['S3', 'S4'];
+            } else if (presetName === 'cintura') {
+                linesToSelect = ['S9', 'S19'];
+            }
+
+            linesToSelect.forEach(l => {
+                activeLines.add(l);
+                document.querySelector(`.btn-${l.toLowerCase()}`).classList.add('active');
+            });
+            updateNetwork();
+        }
+
+        function resetOnboarding() {
+            activeLines.clear();
+            document.querySelectorAll('.line-toggle-btn').forEach(btn => btn.classList.remove('active'));
+            updateNetwork();
+        }
+
+        function updateNetwork() {
+            // Find all active stations from active lines
+            const activeStations = new Set();
+            activeLines.forEach(lineId => {
+                sLines[lineId].stations.forEach(station => activeStations.add(station));
+            });
+
+            // Update SVG lines
+            Object.keys(sLines).forEach(lineId => {
+                const pathEl = document.getElementById(`line-${lineId}`);
+                if (pathEl) {
+                    if (activeLines.has(lineId)) {
+                        pathEl.classList.add('active');
+                    } else {
+                        pathEl.classList.remove('active');
+                    }
+                }
+            });
+
+            // Update SVG Stations UI
+            document.querySelectorAll('.map-station').forEach(stationEl => {
+                const stationId = stationEl.id.replace('station-', '');
+                if (activeLines.size === 0) {
+                    stationEl.classList.remove('active');
+                    stationEl.classList.remove('inactive');
+                } else if (activeStations.has(stationId)) {
+                    stationEl.classList.add('active');
+                    stationEl.classList.remove('inactive');
+                } else {
+                    stationEl.classList.remove('active');
+                    stationEl.classList.add('inactive');
+                }
+            });
+
+            // Render active line badges in Departures Panel
+            const badgesContainer = document.getElementById('active-line-badges-container');
+            badgesContainer.innerHTML = '';
+            activeLines.forEach(lineId => {
+                const badge = document.createElement('span');
+                badge.className = 'train-badge-pill';
+                badge.style.background = sLines[lineId].color;
+                badge.style.color = sLines[lineId].textColor;
+                badge.style.fontSize = '11px';
+                badge.style.padding = '4px 8px';
+                badge.style.marginLeft = '4px';
+                badge.style.borderRadius = '4px';
+                badge.style.fontWeight = '800';
+                badge.textContent = lineId;
+                badgesContainer.appendChild(badge);
+            });
+
+            // Populate mock departures grid
+            const departuresGrid = document.getElementById('departures-board-grid');
+            departuresGrid.innerHTML = '';
+
+            if (activeLines.size === 0) {
+                departuresGrid.innerHTML = `<div class="no-selection-msg">
+                    <p>⚠️ Nessuna linea suburbana configurata nell'onboarding.</p>
+                    <p style="font-size:12px; margin-top:6px; color: var(--text-tertiary);">Seleziona una o più linee a sinistra per simulare la tua dashboard personalizzata.</p>
+                </div>`;
+                return;
+            }
+
+            // Gather all active trains
+            const currentDepartures = [];
+            activeLines.forEach(lineId => {
+                if (mockTrains[lineId]) {
+                    mockTrains[lineId].forEach(train => {
+                        currentDepartures.push({
+                            line: lineId,
+                            color: sLines[lineId].color,
+                            textColor: sLines[lineId].textColor,
+                            ...train
+                        });
+                    });
+                }
+            });
+
+            // Sort mock departures by departure time
+            currentDepartures.sort((a, b) => a.time.localeCompare(b.time));
+
+            // Render rows
+            currentDepartures.forEach(train => {
+                const trainRow = document.createElement('div');
+                trainRow.className = 'train-row reveal visible';
+                trainRow.innerHTML = `
+                    <div class="train-left">
+                        <span class="train-badge-pill" style="background: ${train.color}; color: ${train.textColor};">${train.line}</span>
+                        <div class="train-details">
+                            <h5>Treno ${train.num}</h5>
+                            <p>Destinazione: <b>${train.dest}</b></p>
+                        </div>
+                    </div>
+                    <div class="train-right">
+                        <div class="train-time">${train.time}</div>
+                        <div class="train-delay delay-${train.status}">${train.delay} · Binario ${train.track}</div>
+                    </div>
+                `;
+                departuresGrid.appendChild(trainRow);
+            });
+        }
+
+        function clickStation(stationId) {
+            // Interactive visual alert
+            const stationEl = document.getElementById(`station-${stationId}`);
+            if (stationEl && stationEl.classList.contains('active')) {
+                // Flash animation
+                stationEl.querySelector('circle').style.transform = 'scale(1.8)';
+                setTimeout(() => {
+                    stationEl.querySelector('circle').style.transform = '';
+                }, 200);
+            }
+        }
+
+        // Initialize onboarding system
+        updateNetwork();
+
     </script>
 </body>
 </html>
