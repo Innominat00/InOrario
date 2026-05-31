@@ -23,7 +23,6 @@ struct SmartBoardView: View {
 struct StationBoardView: View {
     let station: Station
     @State private var showingDepartures = true
-    @State private var onlyMagenta = false
     @EnvironmentObject var manager: TrainManager
     @State private var selectedTrain: Train?
     
@@ -35,13 +34,8 @@ struct StationBoardView: View {
     
     var filteredTrains: [Train] {
         var result = manager.trains
-        if onlyMagenta && station.name != "Magenta" {
-            result = result.filter { t in
-                let c = t.category.uppercased()
-                let d = t.destination.lowercased()
-                if c.contains("FR") || c.contains("FA") || c.contains("FB") || c.contains("IC") || c.contains("EC") || c.contains("ITA") || c.contains("NTV") || c.contains("AV") { return false }
-                return d.contains("torino") || d.contains("novara") || d.contains("magenta") || d.contains("trecate")
-            }
+        if manager.isHomeFilterActive && !manager.homeDestinationStationName.isEmpty {
+            result = manager.filterTrainsForHome(result, currentStationName: station.name)
         }
         return result
     }
@@ -236,12 +230,16 @@ struct VTStationBoardView: View {
             .padding(.horizontal)
             .padding(.top, 10)
             
+            let displayTrains = manager.isHomeFilterActive && !manager.homeDestinationStationName.isEmpty
+                ? manager.filterTrainsForHome(manager.trains, currentStationName: stationName)
+                : manager.trains
+            
             if manager.isLoading { ProgressView().padding() }
             
-            if manager.trains.isEmpty && !manager.isLoading {
+            if displayTrains.isEmpty && !manager.isLoading {
                 VStack { Spacer(); Text("Nessun treno trovato in questa stazione.").foregroundColor(.secondary); Spacer() }
             } else {
-                List(manager.trains) { train in
+                List(displayTrains) { train in
                     TrainRowView(train: train)
                         .contentShape(Rectangle())
                         .onTapGesture {

@@ -49,6 +49,7 @@ struct ContentView: View {
     @State private var showReorderSheet = false
     @State private var showNewsCenter = false
     @State private var showOnboarding = false
+    @State private var showNewSmartRouteSheet = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     
     @State private var deepLinkTrain: Train? = nil
@@ -194,55 +195,93 @@ struct ContentView: View {
                             }
                             
                         case .passante:
-                            if !manager.selectedSuburbanLines.isEmpty {
-                                Section {
-                                    DisclosureGroup(isExpanded: $isPassanteExpanded) {
-                                        let selectedLines = SuburbanData.shared.allLines.filter { manager.selectedSuburbanLines.contains($0.id) }
-                                        ForEach(selectedLines) { line in
-                                            let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []
-                                            let visibleStations = line.stations.filter { !hiddenForLine.contains($0.name) }
+                            Section {
+                                DisclosureGroup(isExpanded: $isPassanteExpanded) {
+                                    VStack(alignment: .leading, spacing: 15) {
+                                        // 1. Termometro del tunnel in riga singola (cliccabile)
+                                        PassanteTunnelStatusHeaderView()
+                                        
+                                        // 2. Le mie Tratte Suburbane Preferite (se presenti)
+                                        if !manager.smartRoutes.isEmpty {
+                                            VStack(alignment: .leading, spacing: 8) {
+                                                HStack {
+                                                    Text("Tratte Suburbane Preferite")
+                                                        .font(.system(size: 10, weight: .bold))
+                                                        .foregroundColor(.secondary)
+                                                        .textCase(.uppercase)
+                                                    Spacer()
+                                                }
+                                                .padding(.horizontal, 4)
+                                                
+                                                ForEach(manager.smartRoutes) { route in
+                                                    SuburbanFavoriteRouteCardView(route: route)
+                                                }
+                                            }
                                             
-                                            if !visibleStations.isEmpty {
-                                                VStack(alignment: .leading, spacing: 0) {
-                                                    Text(line.name)
-                                                        .font(.caption)
-                                                        .fontWeight(.bold)
-                                                        .foregroundColor(line.color)
-                                                        .padding(.top, 10)
-                                                        .padding(.horizontal, 15)
-                                                    
-                                                    ScrollView(.horizontal, showsIndicators: false) {
-                                                        HStack(spacing: 0) {
-                                                            ForEach(Array(visibleStations.enumerated()), id: \.element.id) { index, station in
-                                                                let isNearby = (locationManager.nearbyStation?.rfiID == station.rfiID) || (locationManager.nearbyStation?.name == station.name)
-                                                                NavigationLink(destination: SmartBoardView(station: station)) {
-                                                                    PassanteNodeView(station: station, isFirst: index == 0, isLast: index == visibleStations.count - 1, isNearby: isNearby, lineColor: line.color)
+                                            Divider().padding(.vertical, 2)
+                                        }
+                                        
+                                        // 3. Ripristino visualizzazione classica delle linee e stazioni
+                                        if !manager.selectedSuburbanLines.isEmpty {
+                                            let selectedLines = SuburbanData.shared.allLines.filter { manager.selectedSuburbanLines.contains($0.id) }
+                                            ForEach(selectedLines) { line in
+                                                let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []
+                                                let visibleStations = line.stations.filter { !hiddenForLine.contains($0.name) }
+                                                
+                                                if !visibleStations.isEmpty {
+                                                    VStack(alignment: .leading, spacing: 0) {
+                                                        Text(line.name)
+                                                            .font(.caption)
+                                                            .fontWeight(.bold)
+                                                            .foregroundColor(line.color)
+                                                            .padding(.top, 5)
+                                                            .padding(.horizontal, 10)
+                                                        
+                                                        ScrollView(.horizontal, showsIndicators: false) {
+                                                            HStack(spacing: 0) {
+                                                                ForEach(Array(visibleStations.enumerated()), id: \.element.id) { index, station in
+                                                                    let isNearby = (locationManager.nearbyStation?.rfiID == station.rfiID) || (locationManager.nearbyStation?.name == station.name)
+                                                                    NavigationLink(destination: SmartBoardView(station: station)) {
+                                                                        PassanteNodeView(station: station, isFirst: index == 0, isLast: index == visibleStations.count - 1, isNearby: isNearby, lineColor: line.color)
+                                                                    }
                                                                 }
                                                             }
+                                                            .padding(.bottom, 20)
+                                                            .padding(.top, 20)
+                                                            .padding(.horizontal, 10)
                                                         }
-                                                        .padding(.bottom, 25)
-                                                        .padding(.top, 25)
-                                                        .padding(.horizontal, 15)
                                                     }
-                                                }
-                                                .listRowInsets(EdgeInsets())
-                                                
-                                                if line.id != selectedLines.last?.id {
-                                                    Divider()
+                                                    .listRowInsets(EdgeInsets())
+                                                    
+                                                    if line.id != selectedLines.last?.id {
+                                                        Divider().padding(.vertical, 5)
+                                                    }
                                                 }
                                             }
                                         }
-                                    } label: {
-                                        Label("Linee Suburbane", systemImage: "tram.fill")
-                                            .font(.headline)
-                                            .foregroundColor(.orange)
-                                            .padding(.vertical, 4)
                                     }
-                                    .onChange(of: isPassanteExpanded) { oldValue, newValue in
-                                        Haptics.play(.light)
+                                    .padding(.vertical, 10)
+                                    .task {
+                                        await manager.fetchPassanteLive()
+                                        await manager.fetchSmartRoutesLive()
+                                    }
+                                } label: {
+                                    Label("Passante Ferroviario", systemImage: "tram.fill")
+                                        .font(.headline)
+                                        .foregroundColor(.orange)
+                                        .padding(.vertical, 4)
+                                }
+                                .onChange(of: isPassanteExpanded) { oldValue, newValue in
+                                    Haptics.play(.light)
+                                    if newValue {
+                                        Task {
+                                            await manager.fetchPassanteLive()
+                                            await manager.fetchSmartRoutesLive()
+                                        }
                                     }
                                 }
                             }
+                        }
                     }
                     
                     Section {
@@ -263,6 +302,21 @@ struct ContentView: View {
             }
             .navigationTitle(appTitle)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if !manager.homeDestinationStationName.isEmpty {
+                        Button {
+                            Haptics.play(.medium)
+                            withAnimation(.spring()) {
+                                manager.isHomeFilterActive.toggle()
+                            }
+                        } label: {
+                            Image(systemName: manager.isHomeFilterActive ? "house.fill" : "house")
+                                .foregroundColor(manager.isHomeFilterActive ? .orange : .blue)
+                                .font(.title3)
+                        }
+                    }
+                }
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 20) {
                         Button {
@@ -309,6 +363,10 @@ struct ContentView: View {
             .sheet(isPresented: $showSearchSheet, onDismiss: { manager.loadFavorites() }) { SearchView() }
             .sheet(isPresented: $showReorderSheet) { ReorderSectionsView() }
             .sheet(isPresented: $showNewsCenter) { NewsCenterView(news: allNewsItems) }
+            .sheet(isPresented: $showNewSmartRouteSheet) {
+                PassanteQuickSetupView()
+                    .environmentObject(manager)
+            }
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingView(showOnboarding: $showOnboarding)
                     .environmentObject(locationManager)

@@ -126,15 +126,16 @@ struct Haptics {
         }
         
         let passanteStations = [
-            Station(name: "Certosa", rfiID: "1708", vtID: nil, lat: 45.5085, lon: 9.1272),
-            Station(name: "Villapizzone", rfiID: "3099", vtID: nil, lat: 45.4998, lon: 9.1465),
-            Station(name: "Lancetti", rfiID: "1713", vtID: nil, lat: 45.4925, lon: 9.1751),
-            Station(name: "P. Garibaldi Passante", rfiID: "1714", vtID: nil, lat: 45.4844, lon: 9.1887),
-            Station(name: "Repubblica", rfiID: "1719", vtID: nil, lat: 45.4795, lon: 9.1963),
-            Station(name: "Porta Venezia", rfiID: "1723", vtID: nil, lat: 45.4746, lon: 9.2052),
-            Station(name: "Dateo", rfiID: "3468", vtID: nil, lat: 45.4682, lon: 9.2158),
-            Station(name: "Porta Vittoria", rfiID: "1718", vtID: nil, lat: 45.4613, lon: 9.2227),
-            Station(name: "Forlanini", rfiID: "3169", vtID: nil, lat: 45.4625, lon: 9.2368)
+            Station(name: "Rho Fiera", rfiID: "3098", vtID: "S01026", lat: 45.5215, lon: 9.0883),
+            Station(name: "Certosa", rfiID: "1708", vtID: "S01027", lat: 45.5085, lon: 9.1272),
+            Station(name: "Villapizzone", rfiID: "3099", vtID: "S01057", lat: 45.4998, lon: 9.1465),
+            Station(name: "Lancetti", rfiID: "1713", vtID: "S01059", lat: 45.4925, lon: 9.1751),
+            Station(name: "P. Garibaldi Passante", rfiID: "1714", vtID: "S01058", lat: 45.4844, lon: 9.1887),
+            Station(name: "Repubblica", rfiID: "1719", vtID: "S01060", lat: 45.4795, lon: 9.1963),
+            Station(name: "Porta Venezia", rfiID: "1723", vtID: "S01061", lat: 45.4746, lon: 9.2052),
+            Station(name: "Dateo", rfiID: "3468", vtID: "S01062", lat: 45.4682, lon: 9.2158),
+            Station(name: "Porta Vittoria", rfiID: "1718", vtID: "S01063", lat: 45.4613, lon: 9.2227),
+            Station(name: "Forlanini", rfiID: "3169", vtID: "S01064", lat: 45.4625, lon: 9.2368)
         ]
         
         let mainStations = [
@@ -191,6 +192,16 @@ struct StopsResult: Sendable {
     let errorMessage: String?
 }
 
+struct SmartRouteDetails: Identifiable {
+    let id = UUID()
+    let isDirect: Bool
+    let exchangeStation: Station?
+    let originStation: Station
+    let destinationStation: Station
+    let originTrains: [Train]
+    let exchangeTrains: [Train]
+}
+
 // --- 3. MOTORE DI RICERCA IBRIDO ---
 @MainActor class TrainManager: ObservableObject {
     @Published var trains: [Train] = []
@@ -224,6 +235,20 @@ struct StopsResult: Sendable {
     @Published var selectedSuburbanLines: [String] = []
     @Published var hiddenSuburbanStations: [String: [String]] = [:] // idLinea -> [idStazione o Nome]
     
+    // --- Nuove Funzionalità Passante ---
+    @Published var selectedPassanteStation: Station = Station(name: "Porta Venezia", rfiID: "1723", vtID: "S01061", lat: 45.4746, lon: 9.2052)
+    @Published var passanteTrains: [Train] = []
+    @Published var passanteTunnelHealthMessage: String = "Circolazione Regolare nel Tunnel"
+    @Published var passanteTunnelHealthColor: String = "#009640" // Green
+    @Published var passanteTunnelAverageDelay: Int = 0
+    @Published var smartRoutes: [SuburbanRoute] = []
+    
+    // Per memorizzare i dettagli caricati in tempo reale delle tratte preferite
+    @Published var loadedSmartRouteDetails: [String: SmartRouteDetails] = [:]
+    @Published var isLoadingSmartRoutes = false
+    @Published var homeDestinationStationName: String = ""
+    @Published var isHomeFilterActive: Bool = false
+    
     private var refreshTimer: AnyCancellable?
     
     private let favoritesKey = "savedFavoriteTrains_v3"
@@ -233,6 +258,9 @@ struct StopsResult: Sendable {
     private let savedTripsKey = "savedTrips_v1"
     private let selectedSuburbanLinesKey = "selectedSuburbanLines_v1"
     private let hiddenSuburbanStationsKey = "hiddenSuburbanStations_v1"
+    private let selectedPassanteStationKey = "selectedPassanteStation_v1"
+    private let smartRoutesKey = "savedSmartRoutes_v1"
+    private let homeDestinationStationNameKey = "homeDestinationStationName_v1"
     
     let rfiStationMap: [String: String] = [
         "novara": "1917",
@@ -347,6 +375,21 @@ struct StopsResult: Sendable {
         if let data = UserDefaults.standard.data(forKey: hiddenSuburbanStationsKey), let decoded = try? JSONDecoder().decode([String: [String]].self, from: data) {
             self.hiddenSuburbanStations = decoded
         }
+        
+        if let data = UserDefaults.standard.data(forKey: selectedPassanteStationKey), let decoded = try? JSONDecoder().decode(Station.self, from: data) {
+            self.selectedPassanteStation = decoded
+        }
+        
+        if let data = UserDefaults.standard.data(forKey: smartRoutesKey), let decoded = try? JSONDecoder().decode([SuburbanRoute].self, from: data) {
+            self.smartRoutes = decoded
+        } else {
+            self.smartRoutes = [
+                SuburbanRoute(originName: "Magenta", destinationName: "Milano Bovisa")
+            ]
+        }
+        if let homeDest = UserDefaults.standard.string(forKey: homeDestinationStationNameKey) {
+            self.homeDestinationStationName = homeDest
+        }
     }
     
     func saveFavorites() {
@@ -380,6 +423,16 @@ struct StopsResult: Sendable {
         if let encoded = try? JSONEncoder().encode(hiddenSuburbanStations) {
             UserDefaults.standard.set(encoded, forKey: hiddenSuburbanStationsKey)
         }
+        if let encoded = try? JSONEncoder().encode(selectedPassanteStation) {
+            UserDefaults.standard.set(encoded, forKey: selectedPassanteStationKey)
+        }
+        if let encoded = try? JSONEncoder().encode(smartRoutes) {
+            UserDefaults.standard.set(encoded, forKey: smartRoutesKey)
+        }
+        UserDefaults.standard.set(homeDestinationStationName, forKey: homeDestinationStationNameKey)
+        if let groupDefaults = UserDefaults(suiteName: "group.carlo.InOrario") {
+            groupDefaults.set(homeDestinationStationName, forKey: homeDestinationStationNameKey)
+        }
     }
     
     func toggleSuburbanLine(_ id: String) {
@@ -400,6 +453,305 @@ struct StopsResult: Sendable {
         }
         hiddenSuburbanStations[lineId] = hiddenForLine
         saveFavorites()
+    }
+    
+    func filterTrainsForHome(_ trains: [Train], currentStationName: String) -> [Train] {
+        guard !homeDestinationStationName.isEmpty else { return trains }
+        let homeLower = homeDestinationStationName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let currentLower = currentStationName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if currentLower == homeLower {
+            return trains
+        }
+        
+        return trains.filter { train in
+            let destLower = train.destination.lowercased()
+            
+            // 1. MAGENTA
+            if homeLower.contains("magenta") {
+                let eastOfMagenta = ["milano", "garibaldi", "repubblica", "venezia", "dateo", "vittoria", "forlanini", "certosa", "villapizzone", "lancetti", "rho", "pregnana", "vittuone", "arluno"]
+                let isEast = eastOfMagenta.contains { currentLower.contains($0) }
+                if isEast {
+                    if currentLower.contains("garibaldi") {
+                        return destLower.contains("novara") || destLower.contains("magenta") || destLower.contains("trecate")
+                    } else {
+                        return destLower.contains("novara") || destLower.contains("torino") || destLower.contains("magenta") || destLower.contains("trecate") || destLower.contains("lingotto") || destLower.contains("porta nuova")
+                    }
+                }
+                let westOfMagenta = ["novara", "trecate"]
+                let isWest = westOfMagenta.contains { currentLower.contains($0) }
+                if isWest {
+                    return destLower.contains("milano") || destLower.contains("pioltello") || destLower.contains("treviglio") || destLower.contains("passante")
+                }
+            }
+            
+            // 2. MILANO BOVISA
+            if homeLower.contains("bovisa") {
+                let northWestOfBovisa = ["saronno", "mariano", "camnago", "meda", "seveso", "cesano", "bovisio", "varedo", "paderno", "cormano", "cusano", "caronno", "garbagnate", "bollate", "novate"]
+                let isNorthWest = northWestOfBovisa.contains { currentLower.contains($0) }
+                if isNorthWest {
+                    return destLower.contains("cadorna") || destLower.contains("milano") || destLower.contains("pavia") || destLower.contains("lodi") || destLower.contains("rogoredo")
+                }
+                let southEastOfBovisa = ["cadorna", "domodossola", "lancetti", "garibaldi", "repubblica", "venezia", "dateo", "vittoria", "rogoredo", "lodi", "pavia"]
+                let isSouthEast = southEastOfBovisa.contains { currentLower.contains($0) }
+                if isSouthEast {
+                    return destLower.contains("saronno") || destLower.contains("mariano") || destLower.contains("camnago") || destLower.contains("bovisa")
+                }
+            }
+            
+            // 3. MILANO ROGOREDO
+            if homeLower.contains("rogoredo") {
+                let northWestOfRogoredo = ["bovisa", "lancetti", "garibaldi", "repubblica", "venezia", "dateo", "vittoria", "forlanini", "certosa", "villapizzone", "rho", "greco", "lambrate"]
+                let isNorthWest = northWestOfRogoredo.contains { currentLower.contains($0) }
+                if isNorthWest {
+                    return destLower.contains("rogoredo") || destLower.contains("lodi") || destLower.contains("pavia") || destLower.contains("piacenza") || destLower.contains("mantova") || destLower.contains("genova") || destLower.contains("bologna") || destLower.contains("parma") || destLower.contains("melegnano")
+                }
+                let southEastOfRogoredo = ["pavia", "lodi", "melegnano", "piacenza"]
+                let isSouthEast = southEastOfRogoredo.contains { currentLower.contains($0) }
+                if isSouthEast {
+                    return destLower.contains("milano") || destLower.contains("bovisa") || destLower.contains("saronno") || destLower.contains("mariano") || destLower.contains("cadorna") || destLower.contains("torino")
+                }
+            }
+            
+            // 4. MONZA
+            if homeLower.contains("monza") {
+                let southOfMonza = ["milano", "greco", "garibaldi", "lambrate", "forlanini", "rogoredo", "albairate", "cristoforo", "romolo", "romana", "tibaldi", "sesto"]
+                let isSouth = southOfMonza.contains { currentLower.contains($0) }
+                if isSouth {
+                    return destLower.contains("chiasso") || destLower.contains("como") || destLower.contains("seregno") || destLower.contains("lecco") || destLower.contains("monza") || destLower.contains("bergamo") || destLower.contains("carnate") || destLower.contains("molteno") || destLower.contains("colico") || destLower.contains("sondrio")
+                }
+                let northOfMonza = ["como", "chiasso", "lecco", "seregno", "desio", "lissone", "carnate", "arcore"]
+                let isNorth = northOfMonza.contains { currentLower.contains($0) }
+                if isNorth {
+                    return destLower.contains("milano") || destLower.contains("greco") || destLower.contains("albairate") || destLower.contains("saronno") || destLower.contains("rho")
+                }
+            }
+            
+            // 5. SARONNO
+            if homeLower.contains("saronno") {
+                let southEastOfSaronno = ["milano", "cadorna", "bovisa", "domodossola", "greco", "monza", "lodi", "albairate", "romolo", "cristoforo", "lambrate", "garibaldi"]
+                let isSouthEast = southEastOfSaronno.contains { currentLower.contains($0) }
+                if isSouthEast {
+                    return destLower.contains("saronno") || destLower.contains("laveno") || destLower.contains("como") || destLower.contains("novara") || destLower.contains("varese")
+                }
+                let northWestOfSaronno = ["laveno", "como", "varese", "gerenzano", "turate", "lomazzo", "fino", "grandate"]
+                let isNorthWest = northWestOfSaronno.contains { currentLower.contains($0) }
+                if isNorthWest {
+                    return destLower.contains("cadorna") || destLower.contains("milano") || destLower.contains("lodi") || destLower.contains("albairate")
+                }
+            }
+            
+            return destLower.contains(homeLower) || homeLower.contains(destLower)
+        }
+    }
+    
+    // --- FUNZIONI RIVOLUZIONE PASSANTE ---
+    
+    func selectPassanteStation(_ station: Station) {
+        self.selectedPassanteStation = station
+        saveFavorites()
+        Task {
+            await fetchPassanteLive()
+        }
+    }
+    
+    func fetchPassanteLive() async {
+        self.isLoading = true
+        let trainsFetched = await fetchTrainsForStation(station: selectedPassanteStation)
+        self.passanteTrains = trainsFetched
+        
+        // Calcola la salute del tunnel
+        let delays = trainsFetched.compactMap { t -> Int? in
+            let delayStr = t.delay.replacingOccurrences(of: "+", with: "").replacingOccurrences(of: "'", with: "")
+            if delayStr.lowercased().contains("orario") { return 0 }
+            return Int(delayStr)
+        }
+        
+        let cancelledCount = trainsFetched.filter { $0.delay.lowercased().contains("soppresso") || $0.delay.lowercased().contains("cancellato") }.count
+        
+        if trainsFetched.isEmpty {
+            self.passanteTunnelHealthMessage = "Stato del tunnel non disponibile"
+            self.passanteTunnelHealthColor = "#8e8e93" // Gray
+            self.passanteTunnelAverageDelay = 0
+        } else {
+            let avgDelay = delays.isEmpty ? 0 : (delays.reduce(0, +) / delays.count)
+            self.passanteTunnelAverageDelay = avgDelay
+            
+            if cancelledCount > 0 || avgDelay >= 8 {
+                self.passanteTunnelHealthMessage = "Criticità nel Tunnel (\(cancelledCount > 0 ? "\(cancelledCount) Treni Soppressi" : "Ritardo medio +\(avgDelay) min"))"
+                self.passanteTunnelHealthColor = "#e30613" // Red
+            } else if avgDelay >= 3 {
+                self.passanteTunnelHealthMessage = "Rallentamenti nel Tunnel (Ritardo medio +\(avgDelay) min)"
+                self.passanteTunnelHealthColor = "#f39200" // Orange
+            } else {
+                self.passanteTunnelHealthMessage = "Circolazione Regolare nel Tunnel"
+                self.passanteTunnelHealthColor = "#009640" // Green
+            }
+        }
+        
+        self.isLoading = false
+    }
+    
+    var passanteTrainsWestbound: [Train] {
+        passanteTrains.filter { train in
+            let dest = train.destination.lowercased()
+            return dest.contains("bovisa") || dest.contains("saronno") || dest.contains("novara") ||
+                   dest.contains("varese") || dest.contains("rho") || dest.contains("mariano") ||
+                   dest.contains("como") || dest.contains("camnago") || dest.contains("chiasso") ||
+                   dest.contains("gallarate") || dest.contains("malpensa") || dest.contains("cadorna") || dest.contains("domodossola")
+        }
+    }
+    
+    var passanteTrainsEastbound: [Train] {
+        passanteTrains.filter { train in
+            let dest = train.destination.lowercased()
+            return dest.contains("lodi") || dest.contains("pavia") || dest.contains("rogoredo") ||
+                   dest.contains("treviglio") || dest.contains("pioltello") || dest.contains("melegnano") ||
+                   dest.contains("cremona") || dest.contains("piacenza") || dest.contains("mantova") ||
+                   dest.contains("vittoria") || dest.contains("forlanini") || dest.contains("milano rogoredo")
+        }
+    }
+    
+    // Connettore Smart: Gestione tratte preferite
+    func addSmartRoute(origin: String, destination: String) {
+        let route = SuburbanRoute(originName: origin, destinationName: destination)
+        if !smartRoutes.contains(where: { $0.id == route.id }) {
+            smartRoutes.append(route)
+            saveFavorites()
+            Task {
+                await refreshSmartRoute(route: route)
+            }
+        }
+    }
+    
+    func removeSmartRoute(id: String) {
+        smartRoutes.removeAll { $0.id == id }
+        loadedSmartRouteDetails.removeValue(forKey: id)
+        saveFavorites()
+    }
+    
+    func fetchSmartRoutesLive() async {
+        self.isLoadingSmartRoutes = true
+        await withTaskGroup(of: (String, SmartRouteDetails?).self) { group in
+            for route in smartRoutes {
+                group.addTask {
+                    let details = await self.findSuburbanRouteDetails(origin: route.originName, destination: route.destinationName)
+                    return await (route.id, details)
+                }
+            }
+            
+            for await (routeId, details) in group {
+                if let det = details {
+                    self.loadedSmartRouteDetails[routeId] = det
+                }
+            }
+        }
+        self.isLoadingSmartRoutes = false
+    }
+    
+    func refreshSmartRoute(route: SuburbanRoute) async {
+        if let details = await self.findSuburbanRouteDetails(origin: route.originName, destination: route.destinationName) {
+            self.loadedSmartRouteDetails[route.id] = details
+        }
+    }
+    
+    // Algoritmo di pianificazione delle coincidenze suburbane
+    private func findSuburbanRouteDetails(origin: String, destination: String) async -> SmartRouteDetails? {
+        let allStations = SuburbanData.shared.allLines.flatMap { $0.stations }
+        guard let origStation = allStations.first(where: { $0.name.lowercased() == origin.lowercased() }),
+              let destStation = allStations.first(where: { $0.name.lowercased() == destination.lowercased() }) else {
+            return nil
+        }
+        
+        let origLines = SuburbanData.shared.allLines.filter { line in
+            line.stations.contains { $0.name.lowercased() == origin.lowercased() }
+        }
+        let destLines = SuburbanData.shared.allLines.filter { line in
+            line.stations.contains { $0.name.lowercased() == destination.lowercased() }
+        }
+        
+        let directLines = origLines.filter { ol in destLines.contains { dl in dl.id == ol.id } }
+        
+        if !directLines.isEmpty {
+            // Diretto!
+            let scraped = await fetchTrainsForStation(station: origStation)
+            let directTrains = scraped.filter { t in
+                // Il treno appartiene a una delle linee dirette
+                let cat = t.category.uppercased()
+                return directLines.contains { $0.id == cat || t.number.hasPrefix($0.id) }
+            }
+            return SmartRouteDetails(isDirect: true, exchangeStation: nil, originStation: origStation, destinationStation: destStation, originTrains: Array(directTrains.prefix(3)), exchangeTrains: [])
+        } else {
+            // Con cambio nel tunnel centralizzato (o in un nodo comune)
+            let tunnelStations = [
+                "Lancetti", "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria"
+            ]
+            
+            var bestExchange: Station? = nil
+            for ts in tunnelStations {
+                if origLines.contains(where: { $0.stations.contains(where: { $0.name == ts }) }) &&
+                   destLines.contains(where: { $0.stations.contains(where: { $0.name == ts }) }) {
+                    bestExchange = allStations.first(where: { $0.name == ts })
+                    break
+                }
+            }
+            
+            if bestExchange == nil {
+                for line in origLines {
+                    for s in line.stations {
+                        if destLines.contains(where: { $0.stations.contains(where: { $0.name == s.name }) }) {
+                            bestExchange = s
+                            break
+                        }
+                    }
+                    if bestExchange != nil { break }
+                }
+            }
+            
+            guard let exchange = bestExchange else { return nil }
+            
+            // Eseguiamo due fetch paralleli veloci
+            async let origFetch = fetchTrainsForStation(station: origStation)
+            async let exchangeFetch = fetchTrainsForStation(station: exchange)
+            
+            let (origTrains, exTrains) = await (origFetch, exchangeFetch)
+            
+            // Filtra treni di origine diretti verso la stazione di scambio
+            let toExchangeTrains = origTrains.filter { t in
+                let cat = t.category.uppercased()
+                return origLines.contains { $0.id == cat }
+            }
+            
+            // Filtra treni dalla stazione di scambio diretti a destinazione
+            let toDestTrains = exTrains.filter { t in
+                let cat = t.category.uppercased()
+                return destLines.contains { $0.id == cat }
+            }
+            
+            return SmartRouteDetails(
+                isDirect: false,
+                exchangeStation: exchange,
+                originStation: origStation,
+                destinationStation: destStation,
+                originTrains: Array(toExchangeTrains.prefix(2)),
+                exchangeTrains: Array(toDestTrains.prefix(2))
+            )
+        }
+    }
+    
+    nonisolated private func fetchTrainsForStation(station: Station) async -> [Train] {
+        if let rfi = station.rfiID, !rfi.isEmpty {
+            let scraped = await performRfiScraping(for: rfi, isDepartures: true)
+            return scraped.trains
+        } else if let vt = station.vtID, !vt.isEmpty {
+            let f = DateFormatter()
+            f.locale = Locale(identifier: "en_US_POSIX")
+            f.timeZone = TimeZone(identifier: "Europe/Rome")
+            f.dateFormat = "EEE MMM dd yyyy HH:mm:ss 'GMT'ZZZ"
+            let dateStr = f.string(from: Date()).addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+            return await performVTFetch(for: vt, isDepartures: true, dateStr: dateStr)
+        }
+        return []
     }
     
     func saveSectionOrder() {

@@ -263,6 +263,12 @@ struct SuburbanLine: Identifiable, Codable, Hashable {
     }
 }
 
+struct SuburbanRoute: Codable, Identifiable, Equatable {
+    var id: String { "\(originName)-\(destinationName)" }
+    let originName: String
+    let destinationName: String
+}
+
 // Estensione per leggere l'esadecimale
 extension Color {
     init(hex: String) {
@@ -297,36 +303,36 @@ struct SuburbanData {
     
     private init() {
         // --- Stazioni ---
-        let bovisa = Station(name: "Milano Bovisa", rfiID: nil, vtID: nil, lat: 45.5025, lon: 9.1592)
-        let certosa = Station(name: "Certosa", rfiID: "1708", vtID: nil, lat: 45.5085, lon: 9.1272)
-        let villapizzone = Station(name: "Villapizzone", rfiID: "3099", vtID: nil, lat: 45.4998, lon: 9.1465)
-        let lancetti = Station(name: "Lancetti", rfiID: "1713", vtID: nil, lat: 45.4925, lon: 9.1751)
-        let garibaldiPassante = Station(name: "P. Garibaldi Passante", rfiID: "1714", vtID: nil, lat: 45.4844, lon: 9.1887)
-        let repubblica = Station(name: "Repubblica", rfiID: "1719", vtID: nil, lat: 45.4795, lon: 9.1963)
-        let venezia = Station(name: "Porta Venezia", rfiID: "1723", vtID: nil, lat: 45.4746, lon: 9.2052)
-        let dateo = Station(name: "Dateo", rfiID: "3468", vtID: nil, lat: 45.4682, lon: 9.2158)
-        let vittoria = Station(name: "Porta Vittoria", rfiID: "1718", vtID: nil, lat: 45.4613, lon: 9.2227)
-        let rogoredo = Station(name: "Milano Rogoredo", rfiID: "1726", vtID: nil, lat: 45.4333, lon: 9.2389)
-        let forlanini = Station(name: "Forlanini", rfiID: "3169", vtID: nil, lat: 45.4625, lon: 9.2368)
+        let bovisa = Station(name: "Milano Bovisa", rfiID: nil, vtID: "S01201", lat: 45.5025, lon: 9.1592)
+        let certosa = Station(name: "Certosa", rfiID: "1708", vtID: "S01027", lat: 45.5085, lon: 9.1272)
+        let villapizzone = Station(name: "Villapizzone", rfiID: "3099", vtID: "S01057", lat: 45.4998, lon: 9.1465)
+        let lancetti = Station(name: "Lancetti", rfiID: "1713", vtID: "S01059", lat: 45.4925, lon: 9.1751)
+        let garibaldiPassante = Station(name: "P. Garibaldi Passante", rfiID: "1714", vtID: "S01058", lat: 45.4844, lon: 9.1887)
+        let repubblica = Station(name: "Repubblica", rfiID: "1719", vtID: "S01060", lat: 45.4795, lon: 9.1963)
+        let venezia = Station(name: "Porta Venezia", rfiID: "1723", vtID: "S01061", lat: 45.4746, lon: 9.2052)
+        let dateo = Station(name: "Dateo", rfiID: "3468", vtID: "S01062", lat: 45.4682, lon: 9.2158)
+        let vittoria = Station(name: "Porta Vittoria", rfiID: "1718", vtID: "S01063", lat: 45.4613, lon: 9.2227)
+        let rogoredo = Station(name: "Milano Rogoredo", rfiID: "1726", vtID: "S01724", lat: 45.4333, lon: 9.2389)
+        let forlanini = Station(name: "Forlanini", rfiID: "3169", vtID: "S01064", lat: 45.4625, lon: 9.2368)
         
-        let domodossola = Station(name: "Milano Domodossola", rfiID: nil, vtID: nil, lat: 45.4811, lon: 9.1619)
-        let cadorna = Station(name: "Milano Cadorna", rfiID: nil, vtID: nil, lat: 45.4686, lon: 9.1752)
+        let domodossola = Station(name: "Milano Domodossola", rfiID: nil, vtID: "S01206", lat: 45.4811, lon: 9.1619)
+        let cadorna = Station(name: "Milano Cadorna", rfiID: nil, vtID: "S01200", lat: 45.4686, lon: 9.1752)
         
-        let saronno = Station(name: "Saronno", rfiID: nil, vtID: nil, lat: 45.6264, lon: 9.0336)
-        let greco = Station(name: "Milano Greco Pirelli", rfiID: "1706", vtID: nil, lat: 45.5129, lon: 9.2141)
-        let lambrate = Station(name: "Milano Lambrate", rfiID: "1704", vtID: nil, lat: 45.4849, lon: 9.2373)
-        let romana = Station(name: "Milano P. Romana", rfiID: "1727", vtID: nil, lat: 45.4458, lon: 9.2131)
-        let tibaldi = Station(name: "Milano Tibaldi", rfiID: "3540", vtID: nil, lat: 45.4436, lon: 9.1840)
-        let romolo = Station(name: "Milano Romolo", rfiID: "1732", vtID: nil, lat: 45.4432, lon: 9.1678)
-        let cristoforo = Station(name: "Milano S. Cristoforo", rfiID: "1731", vtID: nil, lat: 45.4425, lon: 9.1302)
-        let albairate = Station(name: "Albairate", rfiID: "1734", vtID: nil, lat: 45.4044, lon: 8.9575)
+        let saronno = Station(name: "Saronno", rfiID: nil, vtID: "S01150", lat: 45.6264, lon: 9.0336)
+        let greco = Station(name: "Milano Greco Pirelli", rfiID: "1706", vtID: "S01712", lat: 45.5129, lon: 9.2141)
+        let lambrate = Station(name: "Milano Lambrate", rfiID: "1704", vtID: "S01704", lat: 45.4849, lon: 9.2373)
+        let romana = Station(name: "Milano P. Romana", rfiID: "1727", vtID: "S01721", lat: 45.4458, lon: 9.2131)
+        let tibaldi = Station(name: "Milano Tibaldi", rfiID: "3540", vtID: "S01725", lat: 45.4436, lon: 9.1840)
+        let romolo = Station(name: "Milano Romolo", rfiID: "1732", vtID: "S01722", lat: 45.4432, lon: 9.1678)
+        let cristoforo = Station(name: "Milano S. Cristoforo", rfiID: "1731", vtID: "S01723", lat: 45.4425, lon: 9.1302)
+        let albairate = Station(name: "Albairate", rfiID: "1734", vtID: "S01035", lat: 45.4044, lon: 8.9575)
         
-        let garibaldiSup = Station(name: "Milano P. Garibaldi", rfiID: "1715", vtID: nil, lat: 45.4844, lon: 9.1887)
-        let rhoFiera = Station(name: "Rho Fiera", rfiID: "3098", vtID: nil, lat: 45.5215, lon: 9.0883)
+        let garibaldiSup = Station(name: "Milano P. Garibaldi", rfiID: "1715", vtID: "S01058", lat: 45.4844, lon: 9.1887)
+        let rhoFiera = Station(name: "Rho Fiera", rfiID: "3098", vtID: "S01026", lat: 45.5215, lon: 9.0883)
         
         // --- Flussi ---
         let tunnelOvestBovisa = [bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo]
-        let tunnelOvestCertosa = [certosa, villapizzone, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, forlanini]
+        let tunnelOvestCertosa = [rhoFiera, certosa, villapizzone, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, forlanini]
         let ramoCadorna = [bovisa, domodossola, cadorna]
         let cinturaS9 = [saronno, greco, lambrate, forlanini, romana, tibaldi, romolo, cristoforo, albairate]
         let superficieS11 = [greco, garibaldiSup, villapizzone, certosa, rhoFiera]
