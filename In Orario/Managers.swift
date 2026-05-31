@@ -220,6 +220,10 @@ struct StopsResult: Sendable {
     @Published var savedTrips: [SavedTrip] = []
     @Published var isSearchingSolutions: Bool = false
     
+    // --- Linee Suburbane ---
+    @Published var selectedSuburbanLines: [String] = []
+    @Published var hiddenSuburbanStations: [String: [String]] = [:] // idLinea -> [idStazione o Nome]
+    
     private var refreshTimer: AnyCancellable?
     
     private let favoritesKey = "savedFavoriteTrains_v3"
@@ -227,6 +231,8 @@ struct StopsResult: Sendable {
     private let sectionOrderKey = "savedSectionOrder_v3"
     private let favoriteRoutesKey = "savedFavoriteRoutes_v1"
     private let savedTripsKey = "savedTrips_v1"
+    private let selectedSuburbanLinesKey = "selectedSuburbanLines_v1"
+    private let hiddenSuburbanStationsKey = "hiddenSuburbanStations_v1"
     
     let rfiStationMap: [String: String] = [
         "novara": "1917",
@@ -330,6 +336,17 @@ struct StopsResult: Sendable {
         if let data = UserDefaults.standard.data(forKey: savedTripsKey), let decoded = try? JSONDecoder().decode([SavedTrip].self, from: data) {
             self.savedTrips = decoded
         }
+        
+        if let data = UserDefaults.standard.data(forKey: selectedSuburbanLinesKey), let decoded = try? JSONDecoder().decode([String].self, from: data) {
+            self.selectedSuburbanLines = decoded
+        } else {
+            // Se non ci sono dati, ad esempio mettiamo S5 e S6 come default storico (Certosa-Forlanini)
+            self.selectedSuburbanLines = ["S5", "S6"]
+        }
+        
+        if let data = UserDefaults.standard.data(forKey: hiddenSuburbanStationsKey), let decoded = try? JSONDecoder().decode([String: [String]].self, from: data) {
+            self.hiddenSuburbanStations = decoded
+        }
     }
     
     func saveFavorites() {
@@ -357,6 +374,32 @@ struct StopsResult: Sendable {
                 groupDefaults.set(encoded, forKey: savedTripsKey)
             }
         }
+        if let encoded = try? JSONEncoder().encode(selectedSuburbanLines) {
+            UserDefaults.standard.set(encoded, forKey: selectedSuburbanLinesKey)
+        }
+        if let encoded = try? JSONEncoder().encode(hiddenSuburbanStations) {
+            UserDefaults.standard.set(encoded, forKey: hiddenSuburbanStationsKey)
+        }
+    }
+    
+    func toggleSuburbanLine(_ id: String) {
+        if selectedSuburbanLines.contains(id) {
+            selectedSuburbanLines.removeAll { $0 == id }
+        } else {
+            selectedSuburbanLines.append(id)
+        }
+        saveFavorites()
+    }
+    
+    func toggleHiddenStation(lineId: String, stationName: String) {
+        var hiddenForLine = hiddenSuburbanStations[lineId] ?? []
+        if hiddenForLine.contains(stationName) {
+            hiddenForLine.removeAll { $0 == stationName }
+        } else {
+            hiddenForLine.append(stationName)
+        }
+        hiddenSuburbanStations[lineId] = hiddenForLine
+        saveFavorites()
     }
     
     func saveSectionOrder() {

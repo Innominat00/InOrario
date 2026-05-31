@@ -249,7 +249,105 @@ enum AppSection: String, Codable, CaseIterable {
     case nearby = "Stazione Vicina"
     case myStations = "Le Mie Stazioni"
     case favoriteTrains = "I miei Treni"
-    case passante = "Passante Ferroviario"
+    case passante = "Linee Suburbane"
+}
+
+struct SuburbanLine: Identifiable, Codable, Hashable {
+    let id: String
+    let name: String
+    let hexColor: String
+    let stations: [Station]
+    
+    var color: Color {
+        Color(hex: hexColor)
+    }
+}
+
+// Estensione per leggere l'esadecimale
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
+struct SuburbanData {
+    static let shared = SuburbanData()
+    
+    let allLines: [SuburbanLine]
+    
+    private init() {
+        // --- Stazioni ---
+        let bovisa = Station(name: "Milano Bovisa", rfiID: nil, vtID: nil, lat: 45.5025, lon: 9.1592)
+        let certosa = Station(name: "Certosa", rfiID: "1708", vtID: nil, lat: 45.5085, lon: 9.1272)
+        let villapizzone = Station(name: "Villapizzone", rfiID: "3099", vtID: nil, lat: 45.4998, lon: 9.1465)
+        let lancetti = Station(name: "Lancetti", rfiID: "1713", vtID: nil, lat: 45.4925, lon: 9.1751)
+        let garibaldiPassante = Station(name: "P. Garibaldi Passante", rfiID: "1714", vtID: nil, lat: 45.4844, lon: 9.1887)
+        let repubblica = Station(name: "Repubblica", rfiID: "1719", vtID: nil, lat: 45.4795, lon: 9.1963)
+        let venezia = Station(name: "Porta Venezia", rfiID: "1723", vtID: nil, lat: 45.4746, lon: 9.2052)
+        let dateo = Station(name: "Dateo", rfiID: "3468", vtID: nil, lat: 45.4682, lon: 9.2158)
+        let vittoria = Station(name: "Porta Vittoria", rfiID: "1718", vtID: nil, lat: 45.4613, lon: 9.2227)
+        let rogoredo = Station(name: "Milano Rogoredo", rfiID: "1726", vtID: nil, lat: 45.4333, lon: 9.2389)
+        let forlanini = Station(name: "Forlanini", rfiID: "3169", vtID: nil, lat: 45.4625, lon: 9.2368)
+        
+        let domodossola = Station(name: "Milano Domodossola", rfiID: nil, vtID: nil, lat: 45.4811, lon: 9.1619)
+        let cadorna = Station(name: "Milano Cadorna", rfiID: nil, vtID: nil, lat: 45.4686, lon: 9.1752)
+        
+        let saronno = Station(name: "Saronno", rfiID: nil, vtID: nil, lat: 45.6264, lon: 9.0336)
+        let greco = Station(name: "Milano Greco Pirelli", rfiID: "1706", vtID: nil, lat: 45.5129, lon: 9.2141)
+        let lambrate = Station(name: "Milano Lambrate", rfiID: "1704", vtID: nil, lat: 45.4849, lon: 9.2373)
+        let romana = Station(name: "Milano P. Romana", rfiID: "1727", vtID: nil, lat: 45.4458, lon: 9.2131)
+        let tibaldi = Station(name: "Milano Tibaldi", rfiID: "3540", vtID: nil, lat: 45.4436, lon: 9.1840)
+        let romolo = Station(name: "Milano Romolo", rfiID: "1732", vtID: nil, lat: 45.4432, lon: 9.1678)
+        let cristoforo = Station(name: "Milano S. Cristoforo", rfiID: "1731", vtID: nil, lat: 45.4425, lon: 9.1302)
+        let albairate = Station(name: "Albairate", rfiID: "1734", vtID: nil, lat: 45.4044, lon: 8.9575)
+        
+        let garibaldiSup = Station(name: "Milano P. Garibaldi", rfiID: "1715", vtID: nil, lat: 45.4844, lon: 9.1887)
+        let rhoFiera = Station(name: "Rho Fiera", rfiID: "3098", vtID: nil, lat: 45.5215, lon: 9.0883)
+        
+        // --- Flussi ---
+        let tunnelOvestBovisa = [bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo]
+        let tunnelOvestCertosa = [certosa, villapizzone, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, forlanini]
+        let ramoCadorna = [bovisa, domodossola, cadorna]
+        let cinturaS9 = [saronno, greco, lambrate, forlanini, romana, tibaldi, romolo, cristoforo, albairate]
+        let superficieS11 = [greco, garibaldiSup, villapizzone, certosa, rhoFiera]
+        
+        // --- Linee ---
+        self.allLines = [
+            SuburbanLine(id: "S1", name: "S1 Saronno - Lodi", hexColor: "#e30613", stations: tunnelOvestBovisa),
+            SuburbanLine(id: "S2", name: "S2 Mariano - Rogoredo", hexColor: "#009640", stations: tunnelOvestBovisa),
+            SuburbanLine(id: "S3", name: "S3 Saronno - Cadorna", hexColor: "#a61a30", stations: ramoCadorna),
+            SuburbanLine(id: "S4", name: "S4 Camnago - Cadorna", hexColor: "#8ec06c", stations: ramoCadorna),
+            SuburbanLine(id: "S5", name: "S5 Varese - Treviglio", hexColor: "#f39200", stations: tunnelOvestCertosa),
+            SuburbanLine(id: "S6", name: "S6 Novara - Pioltello", hexColor: "#ffd60a", stations: tunnelOvestCertosa),
+            SuburbanLine(id: "S7", name: "S7 Lecco - P. Garibaldi", hexColor: "#ec008c", stations: [garibaldiSup]),
+            SuburbanLine(id: "S8", name: "S8 Lecco - P. Garibaldi", hexColor: "#fbc5b0", stations: [garibaldiSup]),
+            SuburbanLine(id: "S9", name: "S9 Saronno - Albairate", hexColor: "#7e1f7c", stations: cinturaS9),
+            SuburbanLine(id: "S11", name: "S11 Chiasso - Rho", hexColor: "#8a8bbf", stations: superficieS11),
+            SuburbanLine(id: "S12", name: "S12 Cormano - Melegnano", hexColor: "#005a2b", stations: tunnelOvestBovisa),
+            SuburbanLine(id: "S13", name: "S13 Bovisa - Pavia", hexColor: "#a37a3e", stations: tunnelOvestBovisa),
+            SuburbanLine(id: "S19", name: "S19", hexColor: "#5a0f2b", stations: [])
+        ]
+    }
 }
 
 struct TravelSegment: Identifiable, Sendable {

@@ -65,18 +65,7 @@ struct ContentView: View {
         newsItems.contains { $0.isUrgent }
     }
     
-    let passanteStations = [
-        Station(name: "Certosa", rfiID: "1708", vtID: nil, lat: 45.5085, lon: 9.1272),
-        Station(name: "Villapizzone", rfiID: "3099", vtID: nil, lat: 45.4998, lon: 9.1465),
-        Station(name: "Lancetti", rfiID: "1713", vtID: nil, lat: 45.4925, lon: 9.1751),
-        Station(name: "P. Garibaldi Passante", rfiID: "1714", vtID: nil, lat: 45.4844, lon: 9.1887),
-        Station(name: "Repubblica", rfiID: "1719", vtID: nil, lat: 45.4795, lon: 9.1963),
-        Station(name: "Porta Venezia", rfiID: "1723", vtID: nil, lat: 45.4746, lon: 9.2052),
-        Station(name: "Dateo", rfiID: "3468", vtID: nil, lat: 45.4682, lon: 9.2158),
-        Station(name: "Porta Vittoria", rfiID: "1718", vtID: nil, lat: 45.4613, lon: 9.2227),
-        Station(name: "Forlanini", rfiID: "3169", vtID: nil, lat: 45.4625, lon: 9.2368)
-    ]
-    
+    // passanteStations è ora gestito in SuburbanData.shared
     
     var body: some View {
         NavigationStack {
@@ -205,32 +194,55 @@ struct ContentView: View {
                             }
                             
                         case .passante:
-                            Section {
-                                DisclosureGroup(isExpanded: $isPassanteExpanded) {
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 0) {
-                                            ForEach(Array(passanteStations.enumerated()), id: \.element.id) { index, station in
-                                                let isNearby = locationManager.nearbyStation?.rfiID == station.rfiID
-                                                NavigationLink(destination: SmartBoardView(station: station)) {
-                                                    PassanteNodeView(station: station, isFirst: index == 0, isLast: index == passanteStations.count - 1, isNearby: isNearby)
+                            if !manager.selectedSuburbanLines.isEmpty {
+                                Section {
+                                    DisclosureGroup(isExpanded: $isPassanteExpanded) {
+                                        let selectedLines = SuburbanData.shared.allLines.filter { manager.selectedSuburbanLines.contains($0.id) }
+                                        ForEach(selectedLines) { line in
+                                            let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []
+                                            let visibleStations = line.stations.filter { !hiddenForLine.contains($0.name) }
+                                            
+                                            if !visibleStations.isEmpty {
+                                                VStack(alignment: .leading, spacing: 0) {
+                                                    Text(line.name)
+                                                        .font(.caption)
+                                                        .fontWeight(.bold)
+                                                        .foregroundColor(line.color)
+                                                        .padding(.top, 10)
+                                                        .padding(.horizontal, 15)
+                                                    
+                                                    ScrollView(.horizontal, showsIndicators: false) {
+                                                        HStack(spacing: 0) {
+                                                            ForEach(Array(visibleStations.enumerated()), id: \.element.id) { index, station in
+                                                                let isNearby = (locationManager.nearbyStation?.rfiID == station.rfiID) || (locationManager.nearbyStation?.name == station.name)
+                                                                NavigationLink(destination: SmartBoardView(station: station)) {
+                                                                    PassanteNodeView(station: station, isFirst: index == 0, isLast: index == visibleStations.count - 1, isNearby: isNearby, lineColor: line.color)
+                                                                }
+                                                            }
+                                                        }
+                                                        .padding(.bottom, 25)
+                                                        .padding(.top, 25)
+                                                        .padding(.horizontal, 15)
+                                                    }
+                                                }
+                                                .listRowInsets(EdgeInsets())
+                                                
+                                                if line.id != selectedLines.last?.id {
+                                                    Divider()
                                                 }
                                             }
                                         }
-                                        .padding(.vertical, 25)
-                                        .padding(.horizontal, 15)
+                                    } label: {
+                                        Label("Linee Suburbane", systemImage: "tram.fill")
+                                            .font(.headline)
+                                            .foregroundColor(.orange)
+                                            .padding(.vertical, 4)
                                     }
-                                    .listRowInsets(EdgeInsets())
-                                } label: {
-                                    Label("Passante Ferroviario", systemImage: "tram.fill")
-                                        .font(.headline)
-                                        .foregroundColor(.orange)
-                                        .padding(.vertical, 4)
-                                }
-                                .onChange(of: isPassanteExpanded) { oldValue, newValue in
-                                    Haptics.play(.light)
+                                    .onChange(of: isPassanteExpanded) { oldValue, newValue in
+                                        Haptics.play(.light)
+                                    }
                                 }
                             }
-                        }
                     }
                     
                     Section {

@@ -10,6 +10,7 @@ struct PassanteNodeView: View {
     let isFirst: Bool
     let isLast: Bool
     let isNearby: Bool
+    var lineColor: Color = .orange
     
     @State private var animationScale: CGFloat = 1.0
     @State private var animationOpacity: Double = 1.0
@@ -18,7 +19,7 @@ struct PassanteNodeView: View {
         VStack(spacing: 0) {
             Text(station.name.replacingOccurrences(of: "Milano ", with: "").replacingOccurrences(of: " Passante", with: ""))
                 .font(.system(size: 13, weight: isNearby ? .bold : .medium))
-                .foregroundColor(isNearby ? .orange : .primary)
+                .foregroundColor(isNearby ? lineColor : .primary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(width: 65, height: 73, alignment: .bottomLeading)
@@ -36,19 +37,19 @@ struct PassanteNodeView: View {
             ZStack {
                 HStack(spacing: 0) {
                     Rectangle()
-                        .fill(isFirst ? Color.clear : Color.orange.opacity(0.6))
+                        .fill(isFirst ? Color.clear : lineColor.opacity(0.6))
                         .frame(height: 5)
                     Rectangle()
-                        .fill(isLast ? Color.clear : Color.orange.opacity(0.6))
+                        .fill(isLast ? Color.clear : lineColor.opacity(0.6))
                         .frame(height: 5)
                 }
                 
                 Circle()
-                    .strokeBorder(isNearby ? Color.orange : Color.gray.opacity(0.5), lineWidth: isNearby ? 4 : 2)
-                    .background(Circle().fill(isNearby ? Color.orange : Color(.systemBackground)))
+                    .strokeBorder(isNearby ? lineColor : Color.gray.opacity(0.5), lineWidth: isNearby ? 4 : 2)
+                    .background(Circle().fill(isNearby ? lineColor : Color(.systemBackground)))
                     .frame(width: 16, height: 16)
                     .scaleEffect(isNearby ? animationScale : 1.0)
-                    .shadow(color: isNearby ? .orange.opacity(0.8) : .clear, radius: isNearby ? (animationScale * 5) : 0)
+                    .shadow(color: isNearby ? lineColor.opacity(0.8) : .clear, radius: isNearby ? (animationScale * 5) : 0)
             }
             .frame(width: 65)
         }
@@ -200,7 +201,16 @@ struct ReorderSectionsView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(manager.sectionOrder, id: \.self) { section in
+                Section(header: Text("Linee Suburbane")) {
+                    NavigationLink(destination: CustomizeLinesView()) {
+                        Label("Personalizza Linee e Stazioni", systemImage: "tram.fill")
+                            .foregroundColor(.orange)
+                            .font(.headline)
+                    }
+                }
+                
+                Section(header: Text("Ordine Sezioni")) {
+                    ForEach(manager.sectionOrder, id: \.self) { section in
                     Text(section.rawValue).font(.headline)
                 }
                 .onMove { from, to in
@@ -259,3 +269,75 @@ struct NewsCenterView: View {
     }
 }
 
+struct CustomizeLinesView: View {
+    @EnvironmentObject var manager: TrainManager
+    
+    var body: some View {
+        List {
+            ForEach(SuburbanData.shared.allLines) { line in
+                if line.stations.isEmpty {
+                    Toggle(isOn: Binding(
+                        get: { manager.selectedSuburbanLines.contains(line.id) },
+                        set: { _ in manager.toggleSuburbanLine(line.id) }
+                    )) {
+                        Text(line.name).font(.headline).foregroundColor(line.color)
+                    }
+                } else {
+                    Section {
+                        if manager.selectedSuburbanLines.contains(line.id) {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 15) {
+                                    let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []
+                                    ForEach(line.stations) { station in
+                                        let isHidden = hiddenForLine.contains(station.name)
+                                        
+                                        VStack {
+                                            PassanteNodeView(station: station, isFirst: false, isLast: false, isNearby: false, lineColor: isHidden ? .gray.opacity(0.3) : line.color)
+                                                .opacity(isHidden ? 0.4 : 1.0)
+                                        }
+                                        .overlay(
+                                            Button(action: {
+                                                Haptics.play(.light)
+                                                manager.toggleHiddenStation(lineId: line.id, stationName: station.name)
+                                            }) {
+                                                Image(systemName: isHidden ? "plus.circle.fill" : "minus.circle.fill")
+                                                    .foregroundColor(isHidden ? .green : .red)
+                                                    .background(Circle().fill(Color.white))
+                                                    .font(.title2)
+                                            }
+                                            .offset(x: 15, y: -25)
+                                            , alignment: .topTrailing
+                                        )
+                                        .padding(.top, 20)
+                                    }
+                                }
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, 5)
+                            }
+                            .listRowInsets(EdgeInsets())
+                        }
+                    } header: {
+                        HStack {
+                            Text(line.name).font(.headline).foregroundColor(line.color)
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { manager.selectedSuburbanLines.contains(line.id) },
+                                set: { _ in
+                                    Haptics.play(.medium)
+                                    manager.toggleSuburbanLine(line.id)
+                                }
+                            ))
+                            .labelsHidden()
+                        }
+                    } footer: {
+                        if manager.selectedSuburbanLines.contains(line.id) {
+                            Text("Tocca il tasto - per nascondere le stazioni che non ti interessano, o + per ripristinarle.")
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Linee Suburbane")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
