@@ -113,7 +113,23 @@ struct ContentView: View {
                 List {
                     ForEach(manager.sectionOrder, id: \.self) { section in
                         switch section {
-
+                        case .nearby:
+                            if let nearby = locationManager.nearbyStation {
+                                Section(header: Text("📍 Stazione Vicina").font(.subheadline.bold())) {
+                                    NavigationLink(destination: SmartBoardView(station: nearby)) {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("Sei qui").font(.caption2).fontWeight(.heavy).foregroundColor(.orange).textCase(.uppercase)
+                                                Text(nearby.name).font(.title3).bold().foregroundColor(.primary)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "location.circle.fill").font(.title).foregroundColor(.orange)
+                                        }
+                                        .padding(.vertical, 8)
+                                        .contentShape(Rectangle())
+                                    }
+                                }
+                            }
                             
                         case .favoriteTrains:
                             if !manager.favoriteTrains.isEmpty {

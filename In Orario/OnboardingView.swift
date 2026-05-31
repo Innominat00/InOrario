@@ -39,8 +39,14 @@ struct OnboardingView: View {
             iconColor: .purple
         ),
         OnboardingPage(
-            title: "Notizie e GPS",
-            description: "L'app ti avvisa all'istante in caso di scioperi o ritardi sulla linea tramite notizie chiare riassunte dall'AI. Abilita il GPS per rilevare subito le stazioni del Passante più vicine a te.",
+            title: "Notizie & Scioperi",
+            description: "L'app ti avvisa subito in caso di scioperi o disservizi con notizie chiare ed elaborate tramite intelligenza artificiale per essere precise e tempestive.",
+            iconName: "newspaper.fill",
+            iconColor: .red
+        ),
+        OnboardingPage(
+            title: "Stazioni Vicine",
+            description: "Permetti l'accesso alla tua posizione per scoprire automaticamente le stazioni del Passante e di Trenord più vicine a te.",
             iconName: "location.circle.fill",
             iconColor: .orange
         )

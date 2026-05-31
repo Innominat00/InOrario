@@ -246,6 +246,7 @@ struct Station: Identifiable, Codable, Hashable {
 }
 
 enum AppSection: String, Codable, CaseIterable {
+    case nearby = "Stazione Vicina"
     case myStations = "Le Mie Stazioni"
     case favoriteTrains = "I miei Treni"
     case passante = "Passante Ferroviario"
