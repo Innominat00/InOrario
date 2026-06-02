@@ -207,16 +207,16 @@ struct ContentView: View {
                             }
                             
                         case .passante:
-                            Section {
-                                DisclosureGroup(isExpanded: $isPassanteExpanded) {
-                                    VStack(alignment: .leading, spacing: 15) {
-                                        // 1. Indicatore salute tunnel (solo per chi usa linee che passano nel tunnel)
-                                        if manager.userUsesTunnel {
-                                            PassanteTunnelStatusHeaderView()
-                                        }
-                                        
-                                        // 3. Ripristino visualizzazione classica delle linee e stazioni
-                                        if !manager.selectedSuburbanLines.isEmpty {
+                            if !manager.selectedSuburbanLines.isEmpty {
+                                Section {
+                                    DisclosureGroup(isExpanded: $isPassanteExpanded) {
+                                        VStack(alignment: .leading, spacing: 15) {
+                                            // 1. Indicatore salute tunnel (solo per chi usa linee che passano nel tunnel)
+                                            if manager.userUsesTunnel {
+                                                PassanteTunnelStatusHeaderView()
+                                            }
+                                            
+                                            // 3. Ripristino visualizzazione classica delle linee e stazioni
                                             let selectedLines = SuburbanData.shared.allLines.filter { manager.selectedSuburbanLines.contains($0.id) }
                                             ForEach(selectedLines) { line in
                                                 let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []
@@ -253,19 +253,19 @@ struct ContentView: View {
                                                 }
                                             }
                                         }
+                                        .padding(.vertical, 10)
+                                    } label: {
+                                        Label("Passante Ferroviario", systemImage: "tram.fill")
+                                            .font(.headline)
+                                            .foregroundColor(.orange)
+                                            .padding(.vertical, 4)
                                     }
-                                    .padding(.vertical, 10)
-                                } label: {
-                                    Label("Passante Ferroviario", systemImage: "tram.fill")
-                                        .font(.headline)
-                                        .foregroundColor(.orange)
-                                        .padding(.vertical, 4)
-                                }
-                                .onChange(of: isPassanteExpanded) { oldValue, newValue in
-                                    Haptics.play(.light)
-                                    if newValue {
-                                        Task {
-                                            await manager.fetchPassanteLive()
+                                    .onChange(of: isPassanteExpanded) { oldValue, newValue in
+                                        Haptics.play(.light)
+                                        if newValue {
+                                            Task {
+                                                await manager.fetchPassanteLive()
+                                            }
                                         }
                                     }
                                 }
