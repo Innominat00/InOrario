@@ -12,43 +12,44 @@ struct OnboardingView: View {
     @Binding var showOnboarding: Bool
     @State private var currentPage = 0
     @EnvironmentObject var locationManager: LocationManager
+    @EnvironmentObject var manager: TrainManager
     
     let pages = [
         OnboardingPage(
             title: "Benvenuto su InOrario",
-            description: "Il tuo compagno ideale per viaggiare in treno. Tieni d'occhio stazioni, treni e passante in un'unica schermata premium, pensata in particolare per i pendolari.",
+            description: "Il tuo compagno ideale per viaggiare in treno. Tieni d'occhio stazioni, treni e passante in un'unica schermata premium, pensata specificamente per i pendolari.",
             iconName: "train.side.front.car",
             iconColor: .blue
         ),
         OnboardingPage(
-            title: "Dashboard su Misura",
-            description: "Una vista pulita e ordinata suddivisa in tre sezioni principali:\n\n• Le Mie Stazioni: Le partenze e arrivi in tempo reale dei tuoi scali preferiti.\n\n• I miei Treni: Per monitorare all'istante lo stato dei singoli treni che usi di più.\n\n• Passante Ferroviario: La mappa orizzontale dinamica delle stazioni del passante di Milano.\n\nPersonalizza e riordina le sezioni come preferisci premendo il pulsante in fondo alla schermata!",
+            title: "Treni Suburbani di Milano",
+            description: "Personalizza le linee suburbane abilitando solo quelle che usi e rimuovendo le fermate superflue.",
             iconName: "slider.horizontal.3",
-            iconColor: .blue
-        ),
-        OnboardingPage(
-            title: "Salva i tuoi Viaggi",
-            description: "Pianifichi spesso la stessa combinazione di treni per i tuoi spostamenti?\n\n• Salva le Soluzioni: Cerca una soluzione di viaggio e premi l'icona del segnalibro 🔖 per memorizzarla.\n\n• Accesso Rapido: Accedi all'elenco completo dei tuoi viaggi salvati toccando l'icona verde del segnalibro in alto a destra nella schermata principale.",
-            iconName: "bookmark.fill",
             iconColor: .green
         ),
         OnboardingPage(
-            title: "Trasporto Urbano Integrato",
-            description: "Spostarsi a Milano è semplice e immediato.\n\nQuando pianifichi un viaggio con cambi tra stazioni milanesi (es. da Centrale a Porta Garibaldi), l'app suggerisce automaticamente il Trasporto Urbano (Metro / Mezzi) con tempi stimati di percorrenza, evitandoti la ricerca di scomodi treni regionali cittadini.",
-            iconName: "tram.fill",
+            title: "Stazione di Casa / Lavoro",
+            description: "Cerca e salva la tua stazione preferita. Quando attivi il filtro Casa 🏠, l'app mostrerà solo i treni diretti qui.",
+            iconName: "house.fill",
+            iconColor: .orange
+        ),
+        OnboardingPage(
+            title: "Le Tue Tratte Preferite",
+            description: "Salva le tratte generiche (es. Magenta ➔ Milano Porta Garibaldi) slegate dagli orari per cercarle all'istante in tempo reale.",
+            iconName: "star.fill",
+            iconColor: .yellow
+        ),
+        OnboardingPage(
+            title: "Live Activities & Tunnel",
+            description: "Segui lo stato del tuo treno in tempo reale sulla Schermata di Blocco e sulla Dynamic Island con le Live Activities. Esplora lo stato del Passante con la mappa termometrica live!",
+            iconName: "iphone.circle.fill",
             iconColor: .purple
         ),
         OnboardingPage(
-            title: "Notizie & Scioperi",
-            description: "L'app ti avvisa subito in caso di scioperi o disservizi con notizie chiare ed elaborate tramite intelligenza artificiale per essere precise e tempestive.",
-            iconName: "newspaper.fill",
-            iconColor: .red
-        ),
-        OnboardingPage(
-            title: "Stazioni Vicine",
-            description: "Permetti l'accesso alla tua posizione per scoprire automaticamente le stazioni del Passante e di Trenord più vicine a te.",
+            title: "Scioperi e GPS",
+            description: "Resta aggiornato su scioperi o disservizi con notizie ed elaborazioni intelligenti.\n\nConsenti l'accesso alla posizione per rilevare automaticamente le stazioni del Passante a te più vicine per una navigazione immediata!",
             iconName: "location.circle.fill",
-            iconColor: .orange
+            iconColor: .blue
         )
     ]
     
@@ -73,9 +74,23 @@ struct OnboardingView: View {
                 
                 TabView(selection: $currentPage) {
                     ForEach(0..<pages.count, id: \.self) { index in
-                        OnboardingCardView(page: pages[index], isLastPage: index == pages.count - 1) {
-                            Haptics.play(.medium)
-                            locationManager.requestAuthorization()
+                        VStack {
+                            if index == 0 {
+                                OnboardingCardView(page: pages[index], isLastPage: false) {}
+                            } else if index == 1 {
+                                OnboardingSuburbanCustomizerView()
+                            } else if index == 2 {
+                                OnboardingHomeStationPickerView()
+                            } else if index == 3 {
+                                OnboardingFavoriteRoutesView()
+                            } else if index == 4 {
+                                OnboardingCardView(page: pages[index], isLastPage: false) {}
+                            } else if index == 5 {
+                                OnboardingCardView(page: pages[index], isLastPage: true) {
+                                    Haptics.play(.medium)
+                                    locationManager.requestAuthorization()
+                                }
+                            }
                         }
                         .tag(index)
                     }
@@ -178,6 +193,304 @@ struct OnboardingCardView: View {
             }
             
             Spacer()
+        }
+    }
+}
+
+struct OnboardingSuburbanCustomizerView: View {
+    @EnvironmentObject var manager: TrainManager
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Treni Suburbani di Milano")
+                .font(.system(.title, design: .rounded))
+                .bold()
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+            
+            Text("Abilita solo le linee suburbane che usi e rimuovi con il tasto - le fermate che non ti interessano.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 30)
+            
+            ScrollView {
+                VStack(spacing: 16) {
+                    ForEach(SuburbanData.shared.allLines) { line in
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(line.name)
+                                    .font(.headline)
+                                    .foregroundColor(line.color)
+                                Spacer()
+                                Toggle("", isOn: Binding(
+                                    get: { manager.selectedSuburbanLines.contains(line.id) },
+                                    set: { _ in
+                                        Haptics.play(.medium)
+                                        manager.toggleSuburbanLine(line.id)
+                                    }
+                                ))
+                                .labelsHidden()
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(12)
+                            
+                            if manager.selectedSuburbanLines.contains(line.id) && !line.stations.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 15) {
+                                        let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []
+                                        ForEach(line.stations) { station in
+                                            let isHidden = hiddenForLine.contains(station.name)
+                                            
+                                            VStack {
+                                                PassanteNodeView(station: station, isFirst: false, isLast: false, isNearby: false, lineColor: isHidden ? .gray.opacity(0.3) : line.color)
+                                                    .opacity(isHidden ? 0.4 : 1.0)
+                                            }
+                                            .overlay(
+                                                Button(action: {
+                                                    Haptics.play(.light)
+                                                    manager.toggleHiddenStation(lineId: line.id, stationName: station.name)
+                                                }) {
+                                                    Image(systemName: isHidden ? "plus.circle.fill" : "minus.circle.fill")
+                                                        .foregroundColor(isHidden ? .green : .red)
+                                                        .background(Circle().fill(Color(.systemBackground)))
+                                                        .font(.title3)
+                                                }
+                                                .offset(x: 10, y: -20)
+                                                , alignment: .topTrailing
+                                            )
+                                            .padding(.top, 15)
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 10)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+}
+
+struct OnboardingHomeStationPickerView: View {
+    @EnvironmentObject var manager: TrainManager
+    @State private var homeDestInput = ""
+    @State private var hasSaved = false
+    
+    var body: some View {
+        VStack(spacing: 15) {
+            Text("Stazione di Casa / Lavoro")
+                .font(.system(.title, design: .rounded))
+                .bold()
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+            
+            Text("Salva la tua stazione preferita. Quando attivi il filtro Casa 🏠 sulla toolbar della Home, l'app mostrerà solo i treni diretti qui con calcolo orario in tempo reale.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 30)
+            
+            Spacer()
+            
+            VStack(spacing: 20) {
+                let allStations = SuburbanData.shared.allLines.flatMap { $0.stations.map { $0.name } } + manager.allRFIStations.map { $0.name }
+                AutocompleteField(
+                    label: "Cerca e seleziona Stazione",
+                    placeholder: "Es. Magenta, Rho, Milano Centrale...",
+                    text: $homeDestInput,
+                    suggestions: Array(Set(allStations)).sorted()
+                )
+                .padding(.horizontal, 30)
+                
+                if !manager.homeDestinationStationName.isEmpty {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Stazione salvata: **\(manager.homeDestinationStationName)**")
+                            .font(.body)
+                    }
+                    .padding(.top, 5)
+                }
+                
+                Button(action: {
+                    Haptics.play(.medium)
+                    manager.homeDestinationStationName = homeDestInput
+                    manager.saveFavorites()
+                    hasSaved = true
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }) {
+                    Text(manager.homeDestinationStationName.isEmpty ? "Salva Stazione" : "Aggiorna Stazione")
+                        .bold()
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(homeDestInput.isEmpty ? Color.gray : Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                .disabled(homeDestInput.isEmpty)
+                .padding(.horizontal, 30)
+                
+                if !manager.homeDestinationStationName.isEmpty {
+                    Button(action: {
+                        Haptics.play(.medium)
+                        homeDestInput = ""
+                        manager.homeDestinationStationName = ""
+                        manager.saveFavorites()
+                        hasSaved = false
+                    }) {
+                        Text("Rimuovi stazione salvata")
+                            .foregroundColor(.red)
+                            .font(.subheadline)
+                    }
+                }
+            }
+            
+            Spacer()
+        }
+        .onAppear {
+            homeDestInput = manager.homeDestinationStationName
+        }
+    }
+}
+
+struct OnboardingFavoriteRoutesView: View {
+    @EnvironmentObject var manager: TrainManager
+    
+    @State private var originName = ""
+    @State private var originID = ""
+    @State private var destName = ""
+    @State private var destID = ""
+    
+    @State private var showOriginSearch = false
+    @State private var showDestSearch = false
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Le Tue Tratte Preferite")
+                .font(.system(.title, design: .rounded))
+                .bold()
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+            
+            Text("Salva le tratte generiche (es. Magenta ➔ Milano Porta Garibaldi). Non contengono orari fissi e mostreranno tutti i treni regionali e suburbani in tempo reale.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 30)
+            
+            VStack(spacing: 12) {
+                Button(action: { showOriginSearch = true }) {
+                    HStack {
+                        Image(systemName: "circle.fill")
+                            .foregroundColor(.orange)
+                            .font(.caption2)
+                        Text(originName.isEmpty ? "Seleziona Stazione di Partenza" : originName)
+                            .fontWeight(originName.isEmpty ? .regular : .semibold)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(12)
+                }
+                .foregroundColor(.primary)
+                .padding(.horizontal, 30)
+                
+                Button(action: { showDestSearch = true }) {
+                    HStack {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.subheadline)
+                        Text(destName.isEmpty ? "Seleziona Stazione di Arrivo" : destName)
+                            .fontWeight(destName.isEmpty ? .regular : .semibold)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(12)
+                }
+                .foregroundColor(.primary)
+                .padding(.horizontal, 30)
+                
+                Button(action: {
+                    if !originID.isEmpty && !destID.isEmpty && originID != destID {
+                        Haptics.play(.medium)
+                        manager.toggleFavoriteRoute(originName: originName, originID: originID, destName: destName, destID: destID)
+                        originName = ""
+                        originID = ""
+                        destName = ""
+                        destID = ""
+                    }
+                }) {
+                    Text("Aggiungi ai Preferiti")
+                        .bold()
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(originID.isEmpty || destID.isEmpty || originID == destID ? Color.gray : Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                .disabled(originID.isEmpty || destID.isEmpty || originID == destID)
+                .padding(.horizontal, 30)
+            }
+            
+            Divider()
+                .padding(.horizontal, 30)
+                .padding(.vertical, 5)
+            
+            ScrollView {
+                VStack(spacing: 8) {
+                    if manager.favoriteRoutes.isEmpty {
+                        Text("Nessuna tratta preferita ancora aggiunta.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .italic()
+                            .padding(.top, 10)
+                    } else {
+                        ForEach(manager.favoriteRoutes) { route in
+                            HStack {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "star.fill").foregroundColor(.yellow)
+                                    Text("\(route.originName) ➔ \(route.destinationName)")
+                                        .font(.subheadline.bold())
+                                }
+                                Spacer()
+                                Button(role: .destructive) {
+                                    Haptics.play(.medium)
+                                    manager.toggleFavoriteRoute(originName: route.originName, originID: route.originID, destName: route.destinationName, destID: route.destinationID)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red)
+                                }
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemBackground).opacity(0.6))
+                            .cornerRadius(12)
+                        }
+                    }
+                }
+                .padding(.horizontal, 30)
+            }
+        }
+        .sheet(isPresented: $showOriginSearch) {
+            StationSelectionSheet(selectedName: $originName, selectedID: $originID, title: "Partenza")
+        }
+        .sheet(isPresented: $showDestSearch) {
+            StationSelectionSheet(selectedName: $destName, selectedID: $destID, title: "Arrivo")
         }
     }
 }

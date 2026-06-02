@@ -46,11 +46,12 @@ struct ContentView: View {
     @State private var isFavoritesExpanded = true
     @State private var isMyStationsExpanded = true
     @State private var showSearchSheet = false
-    @State private var showReorderSheet = false
+    @State private var showProfile = false
     @State private var showNewsCenter = false
     @State private var showOnboarding = false
     @State private var showNewSmartRouteSheet = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var hasRequestedLocation = false
     
     @State private var deepLinkTrain: Train? = nil
     @State private var selectedFavoriteTrain: Train? = nil
@@ -109,11 +110,20 @@ struct ContentView: View {
                                     NavigationLink(destination: SmartBoardView(station: nearby)) {
                                         HStack {
                                             VStack(alignment: .leading, spacing: 4) {
-                                                Text("Sei qui").font(.caption2).fontWeight(.heavy).foregroundColor(.orange).textCase(.uppercase)
-                                                Text(nearby.name).font(.title3).bold().foregroundColor(.primary)
+                                                Text("Sei qui")
+                                                    .font(.caption2)
+                                                    .fontWeight(.heavy)
+                                                    .foregroundColor(.orange)
+                                                    .textCase(.uppercase)
+                                                Text(nearby.name)
+                                                    .font(.title3)
+                                                    .fontWeight(.bold)
+                                                    .foregroundColor(.primary)
                                             }
                                             Spacer()
-                                            Image(systemName: "location.circle.fill").font(.title).foregroundColor(.orange)
+                                            Image(systemName: "location.circle.fill")
+                                                .font(.title)
+                                                .foregroundColor(.orange)
                                         }
                                         .padding(.vertical, 8)
                                         .contentShape(Rectangle())
@@ -136,11 +146,13 @@ struct ContentView: View {
                                                         Text("Treno \(fav.number)").font(.headline)
                                                         Text(fav.description).font(.caption).foregroundColor(.secondary)
                                                     }
+                                                    Spacer()
                                                 }
                                                 .padding(.vertical, 4)
                                                 .contentShape(Rectangle())
                                             }
                                             .buttonStyle(.plain)
+                                            .simultaneousGesture(TapGesture().onEnded { Haptics.play(.medium) })
                                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                                 Button(role: .destructive) {
                                                     manager.toggleFavorite(trainNumber: fav.number, description: fav.description)
@@ -198,27 +210,9 @@ struct ContentView: View {
                             Section {
                                 DisclosureGroup(isExpanded: $isPassanteExpanded) {
                                     VStack(alignment: .leading, spacing: 15) {
-                                        // 1. Termometro del tunnel in riga singola (cliccabile)
-                                        PassanteTunnelStatusHeaderView()
-                                        
-                                        // 2. Le mie Tratte Suburbane Preferite (se presenti)
-                                        if !manager.smartRoutes.isEmpty {
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                HStack {
-                                                    Text("Tratte Suburbane Preferite")
-                                                        .font(.system(size: 10, weight: .bold))
-                                                        .foregroundColor(.secondary)
-                                                        .textCase(.uppercase)
-                                                    Spacer()
-                                                }
-                                                .padding(.horizontal, 4)
-                                                
-                                                ForEach(manager.smartRoutes) { route in
-                                                    SuburbanFavoriteRouteCardView(route: route)
-                                                }
-                                            }
-                                            
-                                            Divider().padding(.vertical, 2)
+                                        // 1. Indicatore salute tunnel (solo per chi usa linee che passano nel tunnel)
+                                        if manager.userUsesTunnel {
+                                            PassanteTunnelStatusHeaderView()
                                         }
                                         
                                         // 3. Ripristino visualizzazione classica delle linee e stazioni
@@ -261,10 +255,6 @@ struct ContentView: View {
                                         }
                                     }
                                     .padding(.vertical, 10)
-                                    .task {
-                                        await manager.fetchPassanteLive()
-                                        await manager.fetchSmartRoutesLive()
-                                    }
                                 } label: {
                                     Label("Passante Ferroviario", systemImage: "tram.fill")
                                         .font(.headline)
@@ -276,7 +266,6 @@ struct ContentView: View {
                                     if newValue {
                                         Task {
                                             await manager.fetchPassanteLive()
-                                            await manager.fetchSmartRoutesLive()
                                         }
                                     }
                                 }
@@ -284,18 +273,11 @@ struct ContentView: View {
                         }
                     }
                     
-                    Section {
-                        Button {
-                            Haptics.play(.medium)
-                            showReorderSheet = true
-                        } label: {
-                            HStack { Spacer(); Label("Personalizza Dashboard", systemImage: "slider.horizontal.3").foregroundColor(.blue).font(.subheadline.bold()); Spacer() }
-                        }
-                    }
-                    .listRowBackground(Color.clear)
+
                 }
                 .refreshable {
                     Haptics.play(.medium)
+                    locationManager.requestLocation()
                     await loadNews()
                     manager.loadFavorites()
                 }
@@ -303,17 +285,13 @@ struct ContentView: View {
             .navigationTitle(appTitle)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if !manager.homeDestinationStationName.isEmpty {
-                        Button {
-                            Haptics.play(.medium)
-                            withAnimation(.spring()) {
-                                manager.isHomeFilterActive.toggle()
-                            }
-                        } label: {
-                            Image(systemName: manager.isHomeFilterActive ? "house.fill" : "house")
-                                .foregroundColor(manager.isHomeFilterActive ? .orange : .blue)
-                                .font(.title3)
-                        }
+                    Button {
+                        Haptics.play(.medium)
+                        showProfile = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.title2)
+                            .foregroundColor(.orange)
                     }
                 }
                 
@@ -361,7 +339,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showSearchSheet, onDismiss: { manager.loadFavorites() }) { SearchView() }
-            .sheet(isPresented: $showReorderSheet) { ReorderSectionsView() }
+            .sheet(isPresented: $showProfile) { ProfileView() }
             .sheet(isPresented: $showNewsCenter) { NewsCenterView(news: allNewsItems) }
             .sheet(isPresented: $showNewSmartRouteSheet) {
                 PassanteQuickSetupView()
@@ -370,6 +348,7 @@ struct ContentView: View {
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingView(showOnboarding: $showOnboarding)
                     .environmentObject(locationManager)
+                    .environmentObject(manager)
                     .onDisappear {
                         hasCompletedOnboarding = true
                         locationManager.requestAuthorization()
@@ -379,11 +358,22 @@ struct ContentView: View {
                 manager.loadFavorites()
                 manager.syncLiveActivities()
                 if hasCompletedOnboarding {
-                    locationManager.requestLocation()
+                    if !hasRequestedLocation {
+                        locationManager.requestLocation()
+                        hasRequestedLocation = true
+                    }
                 } else {
                     showOnboarding = true
                 }
                 withAnimation(.spring()) { }
+            }
+            .onChange(of: hasCompletedOnboarding) { oldValue, newValue in
+                if !newValue {
+                    showProfile = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        showOnboarding = true
+                    }
+                }
             }
             .task { await loadNews() }
             

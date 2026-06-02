@@ -10,7 +10,8 @@ struct SmartBoardView: View {
     @EnvironmentObject var manager: TrainManager
     
     var body: some View {
-        if let rfi = station.rfiID, !rfi.isEmpty {
+        let isFerrovienord = station.vtID?.hasPrefix("N") == true
+        if !isFerrovienord, let rfi = station.rfiID, !rfi.isEmpty {
             StationBoardView(station: station)
         } else if let vt = station.vtID, !vt.isEmpty {
             VTStationBoardView(stationName: station.name, vtID: vt)
@@ -23,6 +24,7 @@ struct SmartBoardView: View {
 struct StationBoardView: View {
     let station: Station
     @State private var showingDepartures = true
+    @State private var selectedPassanteDirection = "Ovest"
     @EnvironmentObject var manager: TrainManager
     @State private var selectedTrain: Train?
     
@@ -34,6 +36,11 @@ struct StationBoardView: View {
     
     var filteredTrains: [Train] {
         var result = manager.trains
+        if manager.isPassanteDirectionalStation(station.name) {
+            result = result.filter { train in
+                manager.getPassanteDirection(for: train) == selectedPassanteDirection
+            }
+        }
         if manager.isHomeFilterActive && !manager.homeDestinationStationName.isEmpty {
             result = manager.filterTrainsForHome(result, currentStationName: station.name)
         }
@@ -50,34 +57,68 @@ struct StationBoardView: View {
                 
                 Spacer()
                 
-                // Pilotine per Partenze (P) e Arrivi (A)
-                HStack(spacing: 8) {
-                    Button {
-                        if !showingDepartures {
-                            showingDepartures = true
-                            Haptics.play(.medium)
+                if manager.isPassanteDirectionalStation(station.name) {
+                    HStack(spacing: 4) {
+                        Button {
+                            if selectedPassanteDirection != "Ovest" {
+                                selectedPassanteDirection = "Ovest"
+                                Haptics.play(.medium)
+                            }
+                        } label: {
+                            Text("← Bovisa/Rho")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(selectedPassanteDirection == "Ovest" ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(selectedPassanteDirection == "Ovest" ? .white : .primary)
+                                .cornerRadius(18)
                         }
-                    } label: {
-                        Text("P")
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .frame(width: 36, height: 36)
-                            .background(showingDepartures ? Color.orange : Color(.systemGray5))
-                            .foregroundColor(showingDepartures ? .white : .primary)
-                            .clipShape(Circle())
+                        
+                        Button {
+                            if selectedPassanteDirection != "Est" {
+                                selectedPassanteDirection = "Est"
+                                Haptics.play(.medium)
+                            }
+                        } label: {
+                            Text("Rogoredo/Forlanini →")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(selectedPassanteDirection == "Est" ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(selectedPassanteDirection == "Est" ? .white : .primary)
+                                .cornerRadius(18)
+                        }
                     }
-                    
-                    Button {
-                        if showingDepartures {
-                            showingDepartures = false
-                            Haptics.play(.medium)
+                } else {
+                    // Pilotine per Partenze (P) e Arrivi (A)
+                    HStack(spacing: 8) {
+                        Button {
+                            if !showingDepartures {
+                                showingDepartures = true
+                                Haptics.play(.medium)
+                            }
+                        } label: {
+                            Text("P")
+                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                .frame(width: 36, height: 36)
+                                .background(showingDepartures ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(showingDepartures ? .white : .primary)
+                                .clipShape(Circle())
                         }
-                    } label: {
-                        Text("A")
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .frame(width: 36, height: 36)
-                            .background(!showingDepartures ? Color.orange : Color(.systemGray5))
-                            .foregroundColor(!showingDepartures ? .white : .primary)
-                            .clipShape(Circle())
+                        
+                        Button {
+                            if showingDepartures {
+                                showingDepartures = false
+                                Haptics.play(.medium)
+                            }
+                        } label: {
+                            Text("A")
+                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                .frame(width: 36, height: 36)
+                                .background(!showingDepartures ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(!showingDepartures ? .white : .primary)
+                                .clipShape(Circle())
+                        }
                     }
                 }
             }
@@ -161,7 +202,7 @@ struct StationBoardView: View {
             List {
                 Section(header: Text("Treni RFI")) {
                     ForEach(filteredTrains) { train in
-                        TrainRowView(train: train)
+                        TrainRowView(train: train, showPassanteTag: manager.isCentralPassanteStation(station.name), stationName: station.name)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 Haptics.play(.light)
@@ -200,6 +241,7 @@ struct VTStationBoardView: View {
     let stationName: String
     let vtID: String
     @State private var showingDepartures = true
+    @State private var selectedPassanteDirection = "Ovest"
     @EnvironmentObject var manager: TrainManager
     @State private var selectedTrain: Train?
     
@@ -210,37 +252,81 @@ struct VTStationBoardView: View {
                     .font(.title)
                     .bold()
                 Spacer()
-                HStack(spacing: 8) {
-                    Button {
-                        if !showingDepartures { showingDepartures = true; Haptics.play(.medium) }
-                    } label: {
-                        Text("P").font(.system(size: 15, weight: .bold)).frame(width: 36, height: 36)
-                            .background(showingDepartures ? Color.orange : Color(.systemGray5))
-                            .foregroundColor(showingDepartures ? .white : .primary).clipShape(Circle())
+                
+                if manager.isPassanteDirectionalStation(stationName) {
+                    HStack(spacing: 4) {
+                        Button {
+                            if selectedPassanteDirection != "Ovest" {
+                                selectedPassanteDirection = "Ovest"
+                                Haptics.play(.medium)
+                            }
+                        } label: {
+                            Text("← Bovisa/Rho")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(selectedPassanteDirection == "Ovest" ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(selectedPassanteDirection == "Ovest" ? .white : .primary)
+                                .cornerRadius(18)
+                        }
+                        
+                        Button {
+                            if selectedPassanteDirection != "Est" {
+                                selectedPassanteDirection = "Est"
+                                Haptics.play(.medium)
+                            }
+                        } label: {
+                            Text("Rogoredo/Forlanini →")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(selectedPassanteDirection == "Est" ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(selectedPassanteDirection == "Est" ? .white : .primary)
+                                .cornerRadius(18)
+                        }
                     }
-                    Button {
-                        if showingDepartures { showingDepartures = false; Haptics.play(.medium) }
-                    } label: {
-                        Text("A").font(.system(size: 15, weight: .bold)).frame(width: 36, height: 36)
-                            .background(!showingDepartures ? Color.orange : Color(.systemGray5))
-                            .foregroundColor(!showingDepartures ? .white : .primary).clipShape(Circle())
+                } else {
+                    HStack(spacing: 8) {
+                        Button {
+                            if !showingDepartures { showingDepartures = true; Haptics.play(.medium) }
+                        } label: {
+                            Text("P").font(.system(size: 15, weight: .bold)).frame(width: 36, height: 36)
+                                .background(showingDepartures ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(showingDepartures ? .white : .primary).clipShape(Circle())
+                        }
+                        Button {
+                            if showingDepartures { showingDepartures = false; Haptics.play(.medium) }
+                        } label: {
+                            Text("A").font(.system(size: 15, weight: .bold)).frame(width: 36, height: 36)
+                                .background(!showingDepartures ? Color.orange : Color(.systemGray5))
+                                .foregroundColor(!showingDepartures ? .white : .primary).clipShape(Circle())
+                        }
                     }
                 }
             }
             .padding(.horizontal)
             .padding(.top, 10)
             
-            let displayTrains = manager.isHomeFilterActive && !manager.homeDestinationStationName.isEmpty
-                ? manager.filterTrainsForHome(manager.trains, currentStationName: stationName)
-                : manager.trains
+            let displayTrains: [Train] = {
+                var result = manager.trains
+                if manager.isPassanteDirectionalStation(stationName) {
+                    result = result.filter { train in
+                        manager.getPassanteDirection(for: train) == selectedPassanteDirection
+                    }
+                }
+                if manager.isHomeFilterActive && !manager.homeDestinationStationName.isEmpty {
+                    result = manager.filterTrainsForHome(result, currentStationName: stationName)
+                }
+                return result
+            }()
             
-            if manager.isLoading { ProgressView().padding() }
-            
-            if displayTrains.isEmpty && !manager.isLoading {
+            if manager.isLoading && displayTrains.isEmpty {
+                VStack { Spacer(); ProgressView("Caricamento treni..."); Spacer() }
+            } else if displayTrains.isEmpty && !manager.isLoading {
                 VStack { Spacer(); Text("Nessun treno trovato in questa stazione.").foregroundColor(.secondary); Spacer() }
             } else {
                 List(displayTrains) { train in
-                    TrainRowView(train: train)
+                    TrainRowView(train: train, showPassanteTag: manager.isCentralPassanteStation(stationName), stationName: stationName)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             Haptics.play(.light)
@@ -257,7 +343,7 @@ struct VTStationBoardView: View {
                 .listStyle(.plain)
                 .refreshable {
                     Haptics.play(.light)
-                    await manager.fetchVTTrains(for: vtID, isDepartures: showingDepartures)
+                    await manager.fetchVTTrains(for: vtID, isDepartures: manager.isPassanteDirectionalStation(stationName) ? true : showingDepartures)
                 }
             }
             Text("Dati in tempo reale da ViaggiaTreno").font(.caption2).foregroundColor(.secondary).padding(.bottom, 8)
@@ -279,7 +365,7 @@ struct VTStationBoardView: View {
         }
         .sheet(item: $selectedTrain) { t in NavigationStack { TrainStopsView(train: t) } }
         .onAppear { manager.loadFavorites() }
-        .task(id: showingDepartures) { await manager.fetchVTTrains(for: vtID, isDepartures: showingDepartures) }
+        .task(id: showingDepartures) { await manager.fetchVTTrains(for: vtID, isDepartures: manager.isPassanteDirectionalStation(stationName) ? true : showingDepartures) }
     }
 }
 
