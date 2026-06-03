@@ -399,7 +399,7 @@ struct FeedbackFormView: View {
             "contact": contact
         ]
         
-        guard let url = URL(string: "https://inorario.toreroclub.com/feedback") else {
+        guard let url = URL(string: "https://gestioneinorario.toreroclub.com/feedback") else {
             isSending = false
             return
         }

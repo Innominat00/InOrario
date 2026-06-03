@@ -17,14 +17,14 @@ struct OnboardingView: View {
     let pages = [
         OnboardingPage(
             title: "Benvenuto su In Orario",
-            description: "Il tuo compagno ideale per viaggiare in treno. Nessuna stima statistica: orari in Real-Time assoluto e calcolo dei ritardi minuto per minuto.",
+            description: "Il tuo compagno ideale per viaggiare in treno. Vedi sul tuo iPhone esattamente ciò che mostrano i tabelloni fisici delle stazioni con dati ufficiali RFI aggiornati all'istante.",
             iconName: "train.side.front.car",
             iconColor: .blue
         ),
         OnboardingPage(
-            title: "Treni Suburbani di Milano",
-            description: "Personalizza le linee suburbane. Se le disabiliti tutte, la sezione Passante scomparirà per mantenere la tua Home sempre pulitissima.",
-            iconName: "slider.horizontal.3",
+            title: "Salute del Passante",
+            description: "Per i pendolari di Milano c'è una sezione dedicata che monitora lo stato di salute del Passante Ferroviario. Vedi in tempo reale lo stato della linea e i minuti di attesa per ogni direzione.",
+            iconName: "waveform.path.ecg",
             iconColor: .green
         ),
         OnboardingPage(
@@ -84,7 +84,7 @@ struct OnboardingView: View {
                             if index == 0 {
                                 OnboardingCardView(page: pages[index], isLastPage: false) {}
                             } else if index == 1 {
-                                OnboardingSuburbanCustomizerView()
+                                OnboardingCardView(page: pages[index], isLastPage: false) {}
                             } else if index == 2 {
                                 OnboardingHomeStationPickerView()
                             } else if index == 3 {
@@ -201,88 +201,7 @@ struct OnboardingCardView: View {
             }
             
             Spacer()
-        }
-    }
-}
-
-struct OnboardingSuburbanCustomizerView: View {
-    @EnvironmentObject var manager: TrainManager
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Treni Suburbani di Milano")
-                .font(.system(.title, design: .rounded))
-                .bold()
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-                .padding(.top, 10)
-            
-            Text("Abilita solo le linee suburbane che usi e rimuovi con il tasto - le fermate che non ti interessano.\nSe disabiliti tutte le linee, la sezione Passante scomparirà dalla Home!")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 30)
-            
-            ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(SuburbanData.shared.allLines) { line in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(line.name)
-                                    .font(.headline)
-                                    .foregroundColor(line.color)
-                                Spacer()
-                                Toggle("", isOn: Binding(
-                                    get: { manager.selectedSuburbanLines.contains(line.id) },
-                                    set: { _ in
-                                        Haptics.play(.medium)
-                                        manager.toggleSuburbanLine(line.id)
-                                    }
-                                ))
-                                .labelsHidden()
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(12)
-                            
-                            if manager.selectedSuburbanLines.contains(line.id) && !line.stations.isEmpty {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 15) {
-                                        let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []
-                                        ForEach(line.stations) { station in
-                                            let isHidden = hiddenForLine.contains(station.name)
-                                            
-                                            VStack {
-                                                PassanteNodeView(station: station, isFirst: false, isLast: false, isNearby: false, lineColor: isHidden ? .gray.opacity(0.3) : line.color)
-                                                    .opacity(isHidden ? 0.4 : 1.0)
-                                            }
-                                            .overlay(
-                                                Button(action: {
-                                                    Haptics.play(.light)
-                                                    manager.toggleHiddenStation(lineId: line.id, stationName: station.name)
-                                                }) {
-                                                    Image(systemName: isHidden ? "plus.circle.fill" : "minus.circle.fill")
-                                                        .foregroundColor(isHidden ? .green : .red)
-                                                        .background(Circle().fill(Color(.systemBackground)))
-                                                        .font(.title3)
-                                                }
-                                                .offset(x: 10, y: -20)
-                                                , alignment: .topTrailing
-                                            )
-                                            .padding(.top, 15)
-                                        }
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.bottom, 10)
-                                }
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-        }
+           }
     }
 }
 

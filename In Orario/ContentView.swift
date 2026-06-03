@@ -405,7 +405,7 @@ struct ContentView: View {
     }
     
     func loadNews() async {
-        guard let url = URL(string: "https://inorario.toreroclub.com/news") else { return }
+        guard let url = URL(string: "https://gestioneinorario.toreroclub.com/news") else { return }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let decodedNews = try JSONDecoder().decode([NewsItem].self, from: data)

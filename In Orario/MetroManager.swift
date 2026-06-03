@@ -6,7 +6,7 @@ import Combine
     @Published var isOfflineMode: [String: Bool] = [:]
     
     private let storageKey = "com.magenta.metro.cache"
-    private let baseURL = "https://inorario.toreroclub.com"
+    private let baseURL = "https://gestioneinorario.toreroclub.com"
     
     init() {
         if let data = UserDefaults.standard.data(forKey: storageKey),
