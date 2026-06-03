@@ -7,26 +7,45 @@ struct WidgetSavedTrain: Codable, Identifiable {
     let description: String
 }
 
+struct WidgetTrainData: Identifiable {
+    var id: String { number }
+    let number: String
+    let description: String
+    let delayText: String
+    let delayColor: Color
+}
+
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), trains: [
-            WidgetSavedTrain(number: "2010", description: "Milano Centrale"),
-            WidgetSavedTrain(number: "24555", description: "Treviglio")
+            WidgetTrainData(number: "2010", description: "Milano Centrale", delayText: "In orario", delayColor: .green),
+            WidgetTrainData(number: "24555", description: "Treviglio", delayText: "Ritardo 5 min", delayColor: .red)
         ])
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
         let trains = getFavorites()
-        let entry = SimpleEntry(date: Date(), trains: trains.isEmpty ? placeholder(in: context).trains : trains)
+        let placeholderData = trains.isEmpty ? placeholder(in: context).trains : trains.map { WidgetTrainData(number: $0.number, description: $0.description, delayText: "--", delayColor: .gray) }
+        let entry = SimpleEntry(date: Date(), trains: placeholderData)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        let trains = getFavorites()
-        let entry = SimpleEntry(date: Date(), trains: trains)
-        
-        let timeline = Timeline(entries: [entry], policy: .never)
-        completion(timeline)
+        Task {
+            let savedTrains = getFavorites()
+            var widgetData: [WidgetTrainData] = []
+            
+            for train in savedTrains {
+                let (delay, color) = await fetchTrainStatus(number: train.number)
+                widgetData.append(WidgetTrainData(number: train.number, description: train.description, delayText: delay, delayColor: color))
+            }
+            
+            let entry = SimpleEntry(date: Date(), trains: widgetData)
+            // Aggiorna il widget ogni 5 minuti
+            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())!
+            let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
+            completion(timeline)
+        }
     }
     
     private func getFavorites() -> [WidgetSavedTrain] {
@@ -37,11 +56,72 @@ struct Provider: TimelineProvider {
         }
         return decoded
     }
+    
+    private func fetchTrainStatus(number: String) async -> (String, Color) {
+        let cleanNumber = number.trimmingCharacters(in: .whitespaces)
+        let searchUrl = "https://www.viaggiatreno.it/infomobilita/resteasy/viaggiatreno/cercaNumeroTrenoTrenoAutocomplete/\(cleanNumber)"
+        
+        guard let url = URL(string: searchUrl),
+              let (data, _) = try? await URLSession.shared.data(from: url),
+              let responseStr = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !responseStr.isEmpty else {
+            return ("Non disp.", .gray)
+        }
+        
+        let lines = responseStr.components(separatedBy: "\n")
+        let firstLine = lines.first ?? responseStr
+        
+        let components = firstLine.components(separatedBy: "|")
+        let targetComponent = components.count > 1 ? components[1] : components[0]
+        
+        let dashComponents = targetComponent.components(separatedBy: "-")
+        guard dashComponents.count >= 2 else { return ("Non disp.", .gray) }
+        
+        let originID = dashComponents[1].trimmingCharacters(in: .whitespaces)
+        let dateAndTimestamp = dashComponents.count > 2 ? dashComponents[2].trimmingCharacters(in: .whitespaces) : ""
+        let dateStr = String(dateAndTimestamp.prefix(13))
+        
+        let stopsUrl = "https://www.viaggiatreno.it/infomobilita/resteasy/viaggiatreno/andamentoTreno/\(originID)/\(cleanNumber)/\(dateStr)"
+        guard let sUrl = URL(string: stopsUrl),
+              let (sData, _) = try? await URLSession.shared.data(from: sUrl),
+              let json = try? JSONSerialization.jsonObject(with: sData) as? [String: Any] else {
+            return ("Non disp.", .gray)
+        }
+        
+        if let compRitardo = json["compRitardo"] as? [String], !compRitardo.isEmpty {
+            let ritardoStr = compRitardo[0]
+            if ritardoStr.contains("In orario") {
+                return ("In orario", .green)
+            } else if ritardoStr.contains("ritardo") {
+                if let min = extractMinutes(from: ritardoStr) {
+                    return ("Ritardo \(min) min", .red)
+                }
+                return ("In ritardo", .red)
+            } else if ritardoStr.contains("anticipo") {
+                if let min = extractMinutes(from: ritardoStr) {
+                    return ("Anticipo \(min) min", .green)
+                }
+                return ("In anticipo", .green)
+            }
+        }
+        
+        return ("Non disp.", .gray)
+    }
+    
+    private func extractMinutes(from str: String) -> String? {
+        let components = str.components(separatedBy: .whitespaces)
+        for comp in components {
+            if Int(comp) != nil {
+                return comp
+            }
+        }
+        return nil
+    }
 }
 
 struct SimpleEntry: TimelineEntry {
     let date: Date
-    let trains: [WidgetSavedTrain]
+    let trains: [WidgetTrainData]
 }
 
 struct TrainWidgetEntryView : View {
@@ -82,6 +162,18 @@ struct TrainWidgetEntryView : View {
                                     .lineLimit(1)
                             }
                             Spacer()
+                            
+                            VStack(alignment: .trailing) {
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(train.delayColor)
+                                        .frame(width: 8, height: 8)
+                                    Text(train.delayText)
+                                        .font(.caption)
+                                        .bold()
+                                        .foregroundColor(train.delayColor)
+                                }
+                            }
                         }
                         .padding(.vertical, 4)
                         .padding(.horizontal, 8)
