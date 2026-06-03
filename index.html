@@ -1148,7 +1148,7 @@
         .station-node {
             position: absolute;
             top: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -10px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1801,7 +1801,7 @@
             <h1 class="reveal reveal-delay-1">Il tuo treno,<br>come in <span class="highlight">stazione</span></h1>
 
             <p class="hero-subtitle reveal reveal-delay-2">
-                In Orario si collega direttamente ai tabelloni fisici delle stazioni lombarde (dati ufficiali RFI) per mostrarti esattamente ciò che vedresti sui display in banchina: orari reali, binari precisi ed eventuali cancellazioni impreviste, integrate con gli orari della metropolitana di Milano.
+                In Orario si collega direttamente ai tabelloni delle stazioni. Integrato con gli orari della metropolitana di Milano e con una sezione dedicata alle linee suburbane di Milano e provincia.
             </p>
 
             <div class="hero-actions reveal reveal-delay-3">
@@ -1969,7 +1969,7 @@
                 <!-- BENTO 2: Geofencing -->
                 <div class="bento-card bento-2 reveal reveal-delay-1">
                     <div class="bento-icon" style="background: var(--accent-green-dim);">📍</div>
-                    <h3>Geofencing Intelligente</h3>
+                    <h3>Localizzazione Intelligente</h3>
                     <p>L'app riconosce la tua posizione e ti mostra subito la stazione più vicina entro 15km — Magenta, Vittuone, Rho Fiera o nel Passante Ferroviario.</p>
                     <div class="bento-visual" style="margin-top:16px;">
                         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--accent-green-dim);border-radius:10px;">
@@ -2078,7 +2078,7 @@
                 <div class="bento-card bento-6 reveal">
                     <div class="bento-icon" style="background: rgba(100, 210, 255, 0.12);">⏱️</div>
                     <h3>Tabelloni di Stazione Reali</h3>
-                    <p>Con In Orario vedi esattamente ciò che leggeresti sul tabellone fisico in stazione. Basandosi direttamente sui dati ufficiali RFI di ciascuna stazione anziché sul generico viaggio del treno, eviti ritardi di aggiornamento e binari errati tipici delle altre app o dell'applicazione Trenord.</p>
+                    <p>Con In Orario vedi esattamente ciò che leggeresti sul tabellone fisico in stazione, basandosi direttamente sui dati ufficiali di RFI di ciascuna stazione, anziché sul servizio ViaggiaTreno, che spesso non è aggiornato.</p>
                     <div class="bento-visual">
                         <!-- Station header -->
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -2211,31 +2211,17 @@
                         <div class="passante-stations-row">
                             <div class="station-node" style="left: 0%;">
                                 <div class="node-dot"></div>
-                                <span class="node-name">Rho Fiera</span>
-                            </div>
-                            <div class="station-node" style="left: 20%;">
-                                <div class="node-dot"></div>
                                 <span class="node-name">Lancetti</span>
                             </div>
-                            <div class="station-node" style="left: 40%;">
+                            <div class="station-node" style="left: 50%;">
                                 <div class="node-dot"></div>
-                                <span class="node-name">P. Garibaldi</span>
+                                <span class="node-name">Porta Garibaldi</span>
                                 <div class="metro-badges"><span class="badge-m2">M2</span><span class="badge-m5">M5</span></div>
-                            </div>
-                            <div class="station-node" style="left: 60%;">
-                                <div class="node-dot"></div>
-                                <span class="node-name">Repubblica</span>
-                                <div class="metro-badges"><span class="badge-m3">M3</span></div>
-                            </div>
-                            <div class="station-node" style="left: 80%;">
-                                <div class="node-dot"></div>
-                                <span class="node-name">P. Venezia</span>
-                                <div class="metro-badges"><span class="badge-m1">M1</span></div>
                             </div>
                             <div class="station-node" style="left: 100%;">
                                 <div class="node-dot"></div>
-                                <span class="node-name">Forlanini</span>
-                                <div class="metro-badges"><span class="badge-m4">M4</span></div>
+                                <span class="node-name">Repubblica</span>
+                                <div class="metro-badges"><span class="badge-m3">M3</span></div>
                             </div>
                         </div>
 
@@ -2312,7 +2298,7 @@
                     <!-- Title bar -->
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                         <div style="width:40px;"></div>
-                        <span style="font-size:15px;font-weight:700;">Cerca Viaggi</span>
+                        <span style="font-size:15px;font-weight:700;">Ricerca</span>
                         <span style="font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;">Chiudi</span>
                     </div>
                     <div class="search-tabs">
