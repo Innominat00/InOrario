@@ -16,14 +16,14 @@ struct OnboardingView: View {
     
     let pages = [
         OnboardingPage(
-            title: "Benvenuto su InOrario",
-            description: "Il tuo compagno ideale per viaggiare in treno. Tieni d'occhio stazioni, treni e passante in un'unica schermata premium, pensata specificamente per i pendolari.",
+            title: "Benvenuto su In Orario",
+            description: "Il tuo compagno ideale per viaggiare in treno. Nessuna stima statistica: orari in Real-Time assoluto e calcolo dei ritardi minuto per minuto.",
             iconName: "train.side.front.car",
             iconColor: .blue
         ),
         OnboardingPage(
             title: "Treni Suburbani di Milano",
-            description: "Personalizza le linee suburbane abilitando solo quelle che usi e rimuovendo le fermate superflue.",
+            description: "Personalizza le linee suburbane. Se le disabiliti tutte, la sezione Passante scomparirà per mantenere la tua Home sempre pulitissima.",
             iconName: "slider.horizontal.3",
             iconColor: .green
         ),
@@ -44,6 +44,12 @@ struct OnboardingView: View {
             description: "Segui lo stato del tuo treno in tempo reale sulla Schermata di Blocco e sulla Dynamic Island con le Live Activities. Esplora lo stato del Passante con la mappa termometrica live!",
             iconName: "iphone.circle.fill",
             iconColor: .purple
+        ),
+        OnboardingPage(
+            title: "Metro & Smart Routes",
+            description: "La prima app che integra tutti gli orari della metropolitana di Milano. Inoltre, il motore di ricerca troverà i percorsi più intelligenti combinando treni e mezzi urbani!",
+            iconName: "tram.fill",
+            iconColor: .teal
         ),
         OnboardingPage(
             title: "Scioperi e GPS",
@@ -86,6 +92,8 @@ struct OnboardingView: View {
                             } else if index == 4 {
                                 OnboardingCardView(page: pages[index], isLastPage: false) {}
                             } else if index == 5 {
+                                OnboardingCardView(page: pages[index], isLastPage: false) {}
+                            } else if index == 6 {
                                 OnboardingCardView(page: pages[index], isLastPage: true) {
                                     Haptics.play(.medium)
                                     locationManager.requestAuthorization()
@@ -209,7 +217,7 @@ struct OnboardingSuburbanCustomizerView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
             
-            Text("Abilita solo le linee suburbane che usi e rimuovi con il tasto - le fermate che non ti interessano.")
+            Text("Abilita solo le linee suburbane che usi e rimuovi con il tasto - le fermate che non ti interessano.\nSe disabiliti tutte le linee, la sezione Passante scomparirà dalla Home!")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -301,7 +309,7 @@ struct OnboardingHomeStationPickerView: View {
             Spacer()
             
             VStack(spacing: 20) {
-                let allStations = SuburbanData.shared.allLines.flatMap { $0.stations.map { $0.name } } + manager.allRFIStations.map { $0.name }
+                let allStations = SuburbanData.shared.allLines.flatMap { $0.stations.map { $0.name.capitalized } } + manager.allRFIStations.map { $0.name.capitalized }
                 AutocompleteField(
                     label: "Cerca e seleziona Stazione",
                     placeholder: "Es. Magenta, Rho, Milano Centrale...",

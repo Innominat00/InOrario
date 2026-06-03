@@ -442,6 +442,7 @@ struct SuburbanData {
         let novara = Station(name: "Novara", rfiID: "1917", vtID: "S01017", lat: 45.4524, lon: 8.6253)
         let trecate = Station(name: "Trecate", rfiID: "2909", vtID: "S01019", lat: 45.4374, lon: 8.7428)
         let magenta = Station(name: "Magenta", rfiID: "1618", vtID: "S01021", lat: 45.4641, lon: 8.8845)
+        let corbetta = Station(name: "Corbetta-S.Stefano Ticino", rfiID: "1174", vtID: "S01041", lat: 45.4716, lon: 8.9189)
         let vittuone = Station(name: "Vittuone-Arluno", rfiID: "3119", vtID: "S01023", lat: 45.4921, lon: 8.9568)
         let pregnana = Station(name: "Pregnana Milanese", rfiID: "381", vtID: "S01024", lat: 45.5036, lon: 9.0069)
         let rho = Station(name: "Rho", rfiID: "2345", vtID: "S01025", lat: 45.5262, lon: 9.0402)
@@ -477,6 +478,7 @@ struct SuburbanData {
         let sanDonato = Station(name: "San Donato Milanese", rfiID: "1836", vtID: "S01821", lat: 45.4183, lon: 9.2562)
         let borgolombardo = Station(name: "Borgolombardo", rfiID: "1835", vtID: "S01822", lat: 45.4062, lon: 9.2683)
         let sanGiuliano = Station(name: "San Giuliano Milanese", rfiID: "1834", vtID: "S01823", lat: 45.3983, lon: 9.2812)
+        let melegnano = Station(name: "Melegnano", rfiID: "1833", vtID: "S01824", lat: 45.3592, lon: 9.3235)
         let tavazzano = Station(name: "Tavazzano", rfiID: "1831", vtID: "S01825", lat: 45.3262, lon: 9.3783)
         let lodi = Station(name: "Lodi", rfiID: "1830", vtID: "S01826", lat: 45.2796, lon: 9.4795)
         
@@ -507,11 +509,11 @@ struct SuburbanData {
         let cinturaS9 = [saronno, greco, lambrate, forlanini, romana, tibaldi, romolo, cristoforo, albairate]
         let superficieS11 = [greco, garibaldiSup, villapizzone, certosa, rhoFiera]
         
-        let lineS1Stations = [saronno, caronno, cesate, garbagnateM, garbagnateP, bollateN, bollateC, novate, quartoOggiaro, bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo, sanDonato, borgolombardo, sanGiuliano, tavazzano, lodi]
+        let lineS1Stations = [saronno, caronno, cesate, garbagnateM, garbagnateP, bollateN, bollateC, novate, quartoOggiaro, bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo, sanDonato, borgolombardo, sanGiuliano, melegnano, tavazzano, lodi]
         let lineS2Stations = [mariano, cabiate, meda, seveso, cesano, bovisio, varedo, palazzolo, paderno, cormano, bruzzano, bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo]
         let lineS5Stations = [varese, gazzada, castronno, albizzate, cavaria, gallarate, busto, legnano, canegrate, parabiago, vanzago, rho, rhoFiera, certosa, villapizzone, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, forlanini, segrate, pioltello, melzo, pozzuolo, trecella, cassano, treviglio]
-        let lineS6Stations = [novara, trecate, magenta, vittuone, pregnana, rho, rhoFiera, certosa, villapizzone, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, forlanini, segrate, pioltello]
-        let lineS12Stations = [cormano, bruzzano, bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo, sanDonato, borgolombardo, sanGiuliano]
+        let lineS6Stations = [novara, trecate, magenta, corbetta, vittuone, pregnana, rho, rhoFiera, certosa, villapizzone, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, forlanini, segrate, pioltello]
+        let lineS12Stations = [cormano, bruzzano, bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo, sanDonato, borgolombardo, sanGiuliano, melegnano]
         let lineS13Stations = [bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo, locate, pieve, villamaggiore, certosaPavia, pavia]
         
         // --- Linee ---

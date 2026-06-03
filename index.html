@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>In Orario — Treni in tempo reale per pendolari | iPhone App</title>
-    <meta name="description" content="In Orario: la dashboard definitiva per i pendolari lombardi. Treni in tempo reale, Dynamic Island, metro di Milano, geofencing intelligente. Scarica la beta su TestFlight.">
+    <meta name="description" content="In Orario: la dashboard definitiva per i pendolari lombardi. Treni in tempo reale, Dynamic Island, metro di Milano, geofencing intelligente. Scarica dall'App Store.">
     <meta name="theme-color" content="#0b0b0c">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +33,7 @@
             --accent-purple-dim: rgba(191, 90, 242, 0.12);
             --accent-yellow: #ffd60a;
             --accent-teal: #64d2ff;
-            --accent-testflight: #0ad48b;
+            --accent-appstore: #0a84ff;
 
             --text-primary: #f5f5f7;
             --text-secondary: #86868b;
@@ -387,14 +387,14 @@
             border-color: var(--border-hover);
         }
 
-        .btn-testflight {
-            background: linear-gradient(135deg, var(--accent-testflight), #07b573);
-            color: #022c1b;
-            box-shadow: 0 4px 24px rgba(10, 212, 139, 0.2);
+        .btn-appstore {
+            background: linear-gradient(135deg, var(--accent-appstore), #0066cc);
+            color: #ffffff;
+            box-shadow: 0 4px 24px rgba(10, 132, 255, 0.2);
         }
-        .btn-testflight:hover {
+        .btn-appstore:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 32px rgba(10, 212, 139, 0.35);
+            box-shadow: 0 8px 32px rgba(10, 132, 255, 0.35);
         }
 
         /* Hero Phone Mockup */
@@ -642,8 +642,8 @@
         .tb-teal    .tech-badge-dot { background: var(--accent-teal); }
         .tb-yellow  { color: var(--accent-yellow);  border-color: rgba(255,214,10,0.25);   background: rgba(255,214,10,0.08); }
         .tb-yellow  .tech-badge-dot { background: var(--accent-yellow); }
-        .tb-tf      { color: var(--accent-testflight); border-color: rgba(10,212,139,0.25); background: rgba(10,212,139,0.08); }
-        .tb-tf      .tech-badge-dot { background: var(--accent-testflight); }
+        .tb-as      { color: var(--accent-appstore); border-color: rgba(10,132,255,0.25); background: rgba(10,132,255,0.08); }
+        .tb-as      .tech-badge-dot { background: var(--accent-appstore); }
         .tb-red     { color: var(--accent-red);     border-color: rgba(255,69,58,0.25);    background: rgba(255,69,58,0.08); }
         .tb-red     .tech-badge-dot { background: var(--accent-red); }
 
@@ -1814,8 +1814,10 @@
                 <li><a href="#search">Cerca Treni</a></li>
                 <li><a href="#news">Notizie</a></li>
                 <li><a href="#install" class="nav-cta">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    TestFlight
+                    <div class="tech-badge tb-as">
+                        <div class="tech-badge-dot"></div>
+                        App Store
+                    </div>
                 </a></li>
             </ul>
             <button class="nav-mobile-btn" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Menu">
@@ -1835,24 +1837,21 @@
         <div class="hero-floating float-4">⚡ +3 min</div>
 
         <div class="hero-content">
-            <div class="hero-badge">
+            <div class="hero-badge reveal">
                 <div class="hero-badge-dot"></div>
-                Beta Pubblica su TestFlight
+                Disponibile su App Store
             </div>
 
-            <h1>
-                I tuoi treni,<br>
-                <span class="highlight">sempre sotto controllo.</span>
-            </h1>
+            <h1 class="reveal reveal-delay-1">Il tuo treno,<br>in <span class="highlight">Real-Time Assoluto</span></h1>
 
-            <p class="hero-subtitle">
-                La dashboard definitiva per i pendolari lombardi. Treni regionali in tempo reale, Dynamic&nbsp;Island, metro di Milano, geofencing intelligente. Tutto in un'app nativa per iPhone.
+            <p class="hero-subtitle reveal reveal-delay-2">
+                Nessuna stima statistica. In Orario combina RFI, ViaggiaTreno e Trenitalia per mostrarti i ritardi minuto per minuto, i binari reali e le connessioni con la metropolitana di Milano.
             </p>
 
-            <div class="hero-actions">
-                <a href="https://testflight.apple.com/join/CfHeUYvr" class="btn btn-testflight" target="_blank" rel="noopener">
+            <div class="hero-actions reveal reveal-delay-3">
+                <a href="#install" class="btn btn-appstore">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Installa da TestFlight
+                    Scarica dall'App Store
                 </a>
                 <a href="https://github.com/Innominat00/InOrario" class="btn btn-secondary" target="_blank" rel="noopener">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -2085,11 +2084,11 @@
                     </div>
                 </div>
 
-                <!-- BENTO 5: Train Tracking & Travel Details -->
+                <!-- BENTO 5: Smart Routes & Metro -->
                 <div class="bento-card bento-5 reveal reveal-delay-2">
                     <div class="bento-icon" style="background: var(--accent-red-dim);">🗺️</div>
-                    <h3>Dettagli Viaggio Multi-Treno</h3>
-                    <p>Visualizza ogni segmento del viaggio con fermate in tempo reale, stato "non partito" e ritardi colorati fermata per fermata.</p>
+                    <h3>Smart Routes & Metro</h3>
+                    <p>Ricerca ibrida avanzata: trova il percorso più veloce combinando automaticamente treni regionali e linee della metropolitana urbana.</p>
                     <div class="bento-visual" style="margin-top:16px;">
                         <!-- Journey header -->
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:10px;">
@@ -2119,11 +2118,11 @@
                     </div>
                 </div>
 
-                <!-- BENTO 6: Smart Board -->
+                <!-- BENTO 6: Real-Time Assoluto -->
                 <div class="bento-card bento-6 reveal">
-                    <div class="bento-icon" style="background: rgba(100, 210, 255, 0.12);">🖥️</div>
-                    <h3>Tabellone Intelligente Dual-Source</h3>
-                    <p>Il tabellone sceglie automaticamente la fonte migliore tra RFI e ViaggiaTreno. Partenze e arrivi con indicatore di salute della linea, avvisi di stazione e binari — refresh ogni 45s.</p>
+                    <div class="bento-icon" style="background: rgba(100, 210, 255, 0.12);">⏱️</div>
+                    <h3>Real-Time Assoluto</h3>
+                    <p>Niente più stime! Il countdown sui tabelloni di stazione è calcolato dal vivo e sincronizzato al minuto con i sistemi ufficiali RFI e ViaggiaTreno.</p>
                     <div class="bento-visual">
                         <!-- Station header -->
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -2765,39 +2764,39 @@
     </section>
 
     <!-- ============================================
-         INSTALL (TestFlight)
+         INSTALL (App Store)
          ============================================ -->
     <section class="install-section" id="install">
         <div class="container">
             <div class="install-card reveal">
-                <div class="section-eyebrow" style="color: var(--accent-testflight);">
+                <div class="section-eyebrow" style="color: var(--accent-appstore);">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0 18c4.411 0 8-3.589 8-8s-3.589-8-8-8-8 3.589-8 8 3.589 8 8 8zm-1-11h2v4h-2zm0 6h2v2h-2z"/></svg>
-                    TestFlight
+                    App Store
                 </div>
-                <h2 class="section-title">Prova subito la Beta</h2>
-                <p class="section-subtitle" style="margin: 0 auto 0;">Installazione gratuita in 3 semplici passaggi tramite Apple TestFlight. Nessun account sviluppatore richiesto.</p>
+                <h2 class="section-title">Scarica In Orario</h2>
+                <p class="section-subtitle" style="margin: 0 auto 0;">Disponibile ora gratuitamente per il tuo iPhone.</p>
 
                 <div class="install-steps">
                     <div class="install-step reveal reveal-delay-1">
                         <div class="install-step-num">1</div>
-                        <h4>Scarica TestFlight</h4>
-                        <p>Installa l'app ufficiale <b>TestFlight</b> di Apple dall'App Store. È gratuita e richiede iOS 16+.</p>
+                        <h4>Scarica l'app</h4>
+                        <p>Vai sull'App Store e scarica In Orario direttamente sul tuo iPhone.</p>
                     </div>
                     <div class="install-step reveal reveal-delay-2">
                         <div class="install-step-num">2</div>
-                        <h4>Accetta l'invito</h4>
-                        <p>Clicca il pulsante <b>"Installa da TestFlight"</b> in cima a questa pagina per accettare l'invito alla beta pubblica.</p>
+                        <h4>Personalizza</h4>
+                        <p>Completa l'onboarding e configura la tua dashboard con le stazioni e i treni che usi ogni giorno.</p>
                     </div>
                     <div class="install-step reveal reveal-delay-3">
                         <div class="install-step-num">3</div>
-                        <h4>Inizia a monitorare</h4>
-                        <p>Apri l'app, completa l'onboarding e configura la tua dashboard con le stazioni e i treni che usi ogni giorno.</p>
+                        <h4>Viaggia Smart</h4>
+                        <p>Scopri i percorsi intelligenti, usa la Live Activity e viaggia finalmente senza stress.</p>
                     </div>
                 </div>
 
-                <a href="https://testflight.apple.com/join/CfHeUYvr" class="btn btn-testflight" style="margin-top: 16px;" target="_blank" rel="noopener">
+                <a href="#" class="btn btn-appstore" style="margin-top: 16px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Installa da TestFlight
+                    Scarica dall'App Store
                 </a>
             </div>
         </div>
@@ -2817,7 +2816,7 @@
                 <div class="footer-links">
                     <a href="https://github.com/Innominat00/InOrario" target="_blank" rel="noopener">GitHub</a>
                     <a href="#features">Funzionalità</a>
-                    <a href="#install">TestFlight</a>
+                    <a href="#install">App Store</a>
                 </div>
             </div>
         </div>
