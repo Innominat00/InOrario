@@ -94,7 +94,6 @@ struct SuburbanFavoriteRouteCardView: View {
                                     .font(.system(size: 11, weight: .bold))
                                     .lineLimit(1)
                                 
-                                // Testo descrittivo del ritardo
                                 if delayMin > 0 {
                                     Text("Ritardo di \(delayMin)' (previsto \(train.time) da \(SharedFormatters.formatDestination(route.originName)))")
                                         .font(.system(size: 9))
@@ -108,7 +107,6 @@ struct SuburbanFavoriteRouteCardView: View {
                             
                             Spacer()
                             
-                            // Orario effettivo calcolato in grande
                             Text(train.estimatedArrivalTime)
                                 .font(.system(size: 15, weight: .black, design: .rounded))
                                 .foregroundColor(delayMin > 0 ? .red : .primary)

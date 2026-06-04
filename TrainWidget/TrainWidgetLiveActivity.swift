@@ -5,7 +5,6 @@ import SwiftUI
 struct TrainWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TrainLiveActivityAttributes.self) { context in
-            // VISTA 1: SCHERMATA DI BLOCCO (Lock Screen)
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text("\(context.attributes.category) \(context.attributes.trainNumber)")
@@ -42,7 +41,6 @@ struct TrainWidgetLiveActivity: Widget {
             .widgetURL(URL(string: "inorario://train/\(context.attributes.trainNumber)"))
             
         } dynamicIsland: { context in
-            // VISTA 2: DYNAMIC ISLAND
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     Text(context.attributes.trainNumber)

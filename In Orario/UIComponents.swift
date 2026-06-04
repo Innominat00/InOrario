@@ -5,7 +5,6 @@ import CoreLocation
 import ActivityKit
 import StoreKit
 
-// CustomizeLinesView moved and split into ProfileView.swift
 struct PulsingCircle: View {
     let color: Color
     @State private var scale: CGFloat = 1.0

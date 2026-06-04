@@ -66,7 +66,7 @@ import Combine
             return (s, dist)
         }.sorted(by: { $0.1 < $1.1 })
         
-        if let closest = sortedCandidates.first, closest.1 < 15000 { // 15 km
+        if let closest = sortedCandidates.first, closest.1 < 15000 {
             self.nearbyStation = closest.0
         } else {
             self.nearbyStation = nil

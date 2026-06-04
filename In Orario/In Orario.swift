@@ -1,7 +1,3 @@
-//
-//
-//  Created by Carlo ‎Porta on 22/04/2026.
-//
 
 import SwiftUI
 import BackgroundTasks
@@ -32,7 +28,7 @@ struct InOrario: App {
     
     private func scheduleAppRefresh() {
         let request = BGAppRefreshTaskRequest(identifier: "com.carlo.InOrario.refresh")
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 10 * 60) // Cerca di fare refresh ogni 10 minuti
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 10 * 60)
         do {
             try BGTaskScheduler.shared.submit(request)
         } catch {

@@ -237,10 +237,8 @@ struct PassanteTrainRowView: View {
     
     var body: some View {
         HStack(spacing: 10) {
-            // Badge linea
             SuburbanLineBadge(id: train.category.isEmpty ? "S" : train.category)
             
-            // Destinazione + orario partenza
             VStack(alignment: .leading, spacing: 2) {
                 Text(SharedFormatters.formatDestination(train.destination))
                     .font(.system(size: 13, weight: .bold))
@@ -253,7 +251,6 @@ struct PassanteTrainRowView: View {
             
             Spacer()
             
-            // Stato ritardo
             if isCancelled {
                 Text("Soppresso")
                     .font(.system(size: 10, weight: .bold))

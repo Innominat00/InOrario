@@ -67,7 +67,6 @@ struct ContentView: View {
         newsItems.contains { $0.isUrgent }
     }
     
-    // passanteStations è ora gestito in SuburbanData.shared
     
     var body: some View {
         NavigationStack {
@@ -98,8 +97,7 @@ struct ContentView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 
-                // Il banner enorme è stato rimosso per un design più pulito e premium.
-                // Lo stato degli scioperi critici viene ora mostrato con un triangolo pulsante di fianco al saluto.
+                
                 
                 List {
                     ForEach(manager.sectionOrder, id: \.self) { section in
@@ -211,12 +209,12 @@ struct ContentView: View {
                                 Section {
                                     DisclosureGroup(isExpanded: $isPassanteExpanded) {
                                         VStack(alignment: .leading, spacing: 15) {
-                                            // 1. Indicatore salute tunnel (solo per chi usa linee che passano nel tunnel)
+                                            
                                             if manager.userUsesTunnel {
                                                 PassanteTunnelStatusHeaderView()
                                             }
                                             
-                                            // 3. Ripristino visualizzazione classica delle linee e stazioni
+                                            
                                             let selectedLines = SuburbanData.shared.allLines.filter { manager.selectedSuburbanLines.contains($0.id) }
                                             ForEach(selectedLines) { line in
                                                 let hiddenForLine = manager.hiddenSuburbanStations[line.id] ?? []

@@ -90,7 +90,6 @@ struct StationBoardView: View {
                         }
                     }
                 } else {
-                    // Pilotine per Partenze (P) e Arrivi (A)
                     HStack(spacing: 8) {
                         Button {
                             if !showingDepartures {
@@ -125,7 +124,6 @@ struct StationBoardView: View {
             .padding(.horizontal)
             .padding(.top, 10)
             
-            // BLOCCO INFO STAZIONE: Salute della linea e Avvisi stazione
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Circle()
@@ -172,7 +170,6 @@ struct StationBoardView: View {
             .padding(.horizontal)
             .padding(.top, 10)
 
-            // CARD FISSA DELLA METROPOLITANA
             if !station.metroLines.isEmpty {
                 VStack(spacing: 0) {
                     DisclosureGroup(isExpanded: $isMetroExpanded) {
@@ -198,7 +195,6 @@ struct StationBoardView: View {
             
             Spacer().frame(height: 10)
 
-            // LA LISTA DEI TRENI RFI
             List {
                 Section(header: Text("Treni RFI")) {
                     ForEach(filteredTrains) { train in

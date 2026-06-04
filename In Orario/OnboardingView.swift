@@ -108,7 +108,6 @@ struct OnboardingView: View {
                 
                 Spacer()
                 
-                // Bottom Button
                 Button(action: {
                     Haptics.play(.medium)
                     if currentPage < pages.count - 1 {
@@ -147,7 +146,6 @@ struct OnboardingCardView: View {
         VStack(spacing: 25) {
             Spacer()
             
-            // Icon with soft glowing background
             ZStack {
                 Circle()
                     .fill(page.iconColor.opacity(0.12))
@@ -181,7 +179,6 @@ struct OnboardingCardView: View {
                     .lineSpacing(4)
             }
             
-            // Special action for location page
             if page.iconName == "location.circle.fill" {
                 Button(action: {
                     requestLocationAction()

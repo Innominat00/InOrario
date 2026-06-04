@@ -19,7 +19,6 @@ struct Haptics {
 
 
 
-// --- 3. MOTORE DI RICERCA IBRIDO ---
 @MainActor class TrainManager: ObservableObject {
     @Published var trains: [Train] = []
     @Published var selectedTrainStops: [Stop] = []
@@ -48,28 +47,24 @@ struct Haptics {
     @Published var savedTrips: [SavedTrip] = []
     @Published var isSearchingSolutions: Bool = false
     
-    // --- Linee Suburbane ---
     @Published var selectedSuburbanLines: [String] = []
-    @Published var hiddenSuburbanStations: [String: [String]] = [:] // idLinea -> [idStazione o Nome]
+    @Published var hiddenSuburbanStations: [String: [String]] = [:]
     
-    // --- Nuove Funzionalità Passante ---
     @Published var selectedPassanteStation: Station = Station(name: "Porta Venezia", rfiID: "1723", vtID: "S01061", lat: 45.4746, lon: 9.2052)
     @Published var passanteTrains: [Train] = []
     @Published var isLoadingPassanteBoard = false
     @Published var passanteTunnelHealthMessage: String = "Circolazione Regolare nel Tunnel"
-    @Published var passanteTunnelHealthColor: String = "#009640" // Green
+    @Published var passanteTunnelHealthColor: String = "#009640"
     @Published var passanteTunnelAverageDelay: Int = 0
     @Published var passanteTunnelTrains: [Train] = []
     @Published var passanteLiveStatuses: [String: TrainStatus] = [:]
     @Published var smartRoutes: [SuburbanRoute] = []
     
-    // Per memorizzare i dettagli caricati in tempo reale delle tratte preferite
     @Published var loadedSmartRouteDetails: [String: SmartRouteDetails] = [:]
     @Published var isLoadingSmartRoutes = false
     @Published var homeDestinationStationName: String = ""
     @Published var isHomeFilterActive: Bool = false
     
-    // --- Nuove Funzionalità Profilo ---
     @Published var userName: String = ""
     @Published var useSpecialPassanteView: Bool = true
     @Published var iCloudSyncEnabled: Bool = true
@@ -110,7 +105,6 @@ struct Haptics {
         let totalTrains = trains.count
         if totalTrains == 0 { return ("Dati non disponibili", .gray) }
         
-        // Determina se un treno è Alta Velocità o Lunga Percorrenza (AV, Frecciarossa, Italo, Intercity, Eurocity)
         let isAVOrLongDistance: (Train) -> Bool = { train in
             let cat = train.category.uppercased()
             let dest = train.destination.uppercased()
@@ -121,9 +115,6 @@ struct Haptics {
                    dest.contains("ITALO") || dest.contains("FRECCIAROSSA")
         }
         
-        // ── CATEGORIA 1: TRENI REGIONALI / SUBURBANI ───────────────────
-        // Soglia Rallentamenti (Orange): ritardo >= 10 min
-        // Soglia Criticità (Red): ritardo >= 20 min o cancellazione
         let regTrains = trains.filter { !isAVOrLongDistance($0) }
         
         let regCritical = regTrains.filter { train in
@@ -142,9 +133,6 @@ struct Haptics {
             return delayMin >= 10 && delayMin < 20
         }
         
-        // ── CATEGORIA 2: ALTA VELOCITÀ / LUNGA PERCORRENZA ──────────────
-        // Soglia Rallentamenti (Orange): ritardo >= 15 min
-        // Soglia Criticità (Red): ritardo >= 30 min o cancellazione
         let avTrains = trains.filter { isAVOrLongDistance($0) }
         
         let avCritical = avTrains.filter { train in
@@ -163,9 +151,7 @@ struct Haptics {
             return delayMin >= 15 && delayMin < 30
         }
         
-        // ── COMPOSIZIONE DELLO STATO (Priorità ai Regionali) ──────────────
         
-        // 1. Criticità (Rosso) sui treni Regionali
         if !regCritical.isEmpty {
             let directions = getUniqueDirections(for: regCritical)
             let hasCancellations = regCritical.contains { $0.delay.lowercased().contains("soppresso") || $0.delay.lowercased().contains("cancellato") }
@@ -176,28 +162,23 @@ struct Haptics {
             }
         }
         
-        // 2. Criticità (Rosso) su Alta Velocità
         if !avCritical.isEmpty {
             let hasCancellations = avCritical.contains { $0.delay.lowercased().contains("soppresso") || $0.delay.lowercased().contains("cancellato") }
             return (hasCancellations ? "Soppressioni Alta Velocità" : "Forti Ritardi Alta Velocità", .red)
         }
         
-        // 3. Rallentamenti (Arancione) sui Regionali
         if !regDelayed.isEmpty {
             let directions = getUniqueDirections(for: regDelayed)
             return (directions.isEmpty ? "Rallentamenti" : "Rallentamenti dir. \(directions)", .orange)
         }
         
-        // 4. Rallentamenti (Arancione) su Alta Velocità
         if !avDelayed.isEmpty {
             return ("Ritardi Alta Velocità", .orange)
         }
         
-        // 5. Se non ci sono problemi che superano le soglie, la circolazione è regolare
         return ("Circolazione Regolare", .green)
     }
     
-    // Helper privato per ottenere le destinazioni principali di un set di treni
     private func getUniqueDirections(for trainsList: [Train]) -> String {
         let getCleanDirection: (Train) -> String = { train in
             let dest = train.destination.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -251,7 +232,6 @@ struct Haptics {
             var dict: [String: String] = [:]
             var normDict: [String: String] = [:]
             for station in decoded {
-                // Solo le stazioni con un vero ID RFI entrano nel dizionario
                 guard let rfiID = station.rfiID, !rfiID.isEmpty else { continue }
                 let lower = station.name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
                 dict[lower] = rfiID
@@ -287,7 +267,6 @@ struct Haptics {
         if let data = UserDefaults.standard.data(forKey: favoritesKey), let decoded = try? JSONDecoder().decode([SavedTrain].self, from: data) { self.favoriteTrains = decoded }
         
         if let data = UserDefaults.standard.data(forKey: myStationsKey), let decoded = try? JSONDecoder().decode([Station].self, from: data) {
-            // Fix corrupted stations that might have vtID saved as rfiID
             self.myStations = decoded.map { st in
                 if let rfi = st.rfiID, (rfi.hasPrefix("S") || rfi.hasPrefix("N")) {
                     return Station(name: st.name, rfiID: nil, vtID: st.vtID, lat: st.lat, lon: st.lon)
@@ -318,7 +297,6 @@ struct Haptics {
         if let data = UserDefaults.standard.data(forKey: selectedSuburbanLinesKey), let decoded = try? JSONDecoder().decode([String].self, from: data) {
             self.selectedSuburbanLines = decoded
         } else {
-            // Se non ci sono dati, ad esempio mettiamo S5 e S6 come default storico (Certosa-Forlanini)
             self.selectedSuburbanLines = ["S5", "S6"]
         }
         
@@ -438,7 +416,6 @@ struct Haptics {
         return trains.filter { train in
             let destLower = train.destination.lowercased()
             
-            // 1. MAGENTA
             if homeLower.contains("magenta") {
                 let eastOfMagenta = ["milano", "garibaldi", "repubblica", "venezia", "dateo", "vittoria", "forlanini", "certosa", "villapizzone", "lancetti", "rho", "pregnana", "vittuone", "arluno"]
                 let isEast = eastOfMagenta.contains { currentLower.contains($0) }
@@ -460,7 +437,6 @@ struct Haptics {
                 }
             }
             
-            // 2. MILANO BOVISA
             if homeLower.contains("bovisa") {
                 let northWestOfBovisa = ["saronno", "mariano", "camnago", "meda", "seveso", "cesano", "bovisio", "varedo", "paderno", "cormano", "cusano", "caronno", "garbagnate", "bollate", "novate"]
                 let isNorthWest = northWestOfBovisa.contains { currentLower.contains($0) }
@@ -474,7 +450,6 @@ struct Haptics {
                 }
             }
             
-            // 3. MILANO ROGOREDO
             if homeLower.contains("rogoredo") {
                 let northWestOfRogoredo = ["bovisa", "lancetti", "garibaldi", "repubblica", "venezia", "dateo", "vittoria", "forlanini", "certosa", "villapizzone", "rho", "greco", "lambrate"]
                 let isNorthWest = northWestOfRogoredo.contains { currentLower.contains($0) }
@@ -488,7 +463,6 @@ struct Haptics {
                 }
             }
             
-            // 4. MONZA
             if homeLower.contains("monza") {
                 let southOfMonza = ["milano", "greco", "garibaldi", "lambrate", "forlanini", "rogoredo", "albairate", "cristoforo", "romolo", "romana", "tibaldi", "sesto"]
                 let isSouth = southOfMonza.contains { currentLower.contains($0) }
@@ -502,7 +476,6 @@ struct Haptics {
                 }
             }
             
-            // 5. SARONNO
             if homeLower.contains("saronno") {
                 let southEastOfSaronno = ["milano", "cadorna", "bovisa", "domodossola", "greco", "monza", "lodi", "albairate", "romolo", "cristoforo", "lambrate", "garibaldi"]
                 let isSouthEast = southEastOfSaronno.contains { currentLower.contains($0) }
@@ -520,7 +493,6 @@ struct Haptics {
         }
     }
     
-    // --- FUNZIONI RIVOLUZIONE PASSANTE ---
     
     func selectPassanteStation(_ station: Station) {
         self.selectedPassanteStation = station
@@ -531,18 +503,15 @@ struct Haptics {
     }
     
     func fetchPassanteLive() async {
-        // Aggiorna il tabellone per la stazione selezionata
         self.isLoadingPassanteBoard = true
         let trainsFetched = await fetchTrainsForStation(station: selectedPassanteStation)
         self.passanteTrains = trainsFetched
         self.isLoadingPassanteBoard = false
         
-        // Aggiorna la salute del tunnel dalla stazione centrale Repubblica (indipendente dalla selezione)
         await fetchTunnelHealth()
     }
     
     func fetchTunnelHealth() async {
-        // La salute è sempre calcolata su Repubblica, stazione centrale del tunnel
         let repubblica = Station(name: "Repubblica", rfiID: "1719", vtID: "S01060", lat: 45.4795, lon: 9.1963)
         let trainsFetched = await fetchTrainsForStation(station: repubblica)
         
@@ -555,8 +524,6 @@ struct Haptics {
         let cancelledCount = trainsFetched.filter { $0.delay.lowercased().contains("soppresso") || $0.delay.lowercased().contains("cancellato") }.count
         
         if trainsFetched.isEmpty {
-            // Transient network failure or empty response: do NOT wipe the UI.
-            // Just return early and try again in 15 seconds.
             return
         } else {
             let resolveLine: (Train) -> String = { train in
@@ -585,14 +552,12 @@ struct Haptics {
             let avgDelay = delays.isEmpty ? 0 : (delays.reduce(0, +) / delays.count)
             self.passanteTunnelAverageDelay = avgDelay
             
-            // Filtra le query live in base alle linee suburbane scelte dalle impostazioni
             let targetLines = self.selectedSuburbanLines.isEmpty ? ["S1", "S2", "S5", "S6", "S12", "S13"] : self.selectedSuburbanLines
             let trainsToQuery = trainsFetched.filter { train in
                 let line = resolveLine(train)
                 return targetLines.contains(line)
             }
             
-            // Fetch live status for these trains
             await withTaskGroup(of: (String, TrainStatus?).self) { group in
                 for train in trainsToQuery {
                     group.addTask {
@@ -609,7 +574,6 @@ struct Haptics {
                 }
             }
             
-            // Analisi dettagliata per singola linea suburbana del Passante
             var lineCancellations: [String: Int] = [:]
             var lineDelays: [String: [Int]] = [:]
             
@@ -627,7 +591,6 @@ struct Haptics {
                 }
             }
             
-            // Determina lo stato di ciascuna linea suburbana
             var criticalLines: [String] = []
             var delayedLines: [String] = []
             
@@ -643,7 +606,6 @@ struct Haptics {
                 }
             }
             
-            // Definisce il messaggio di stato specifico basato sulle linee
             if !criticalLines.isEmpty {
                 let sorted = criticalLines.sorted(by: {
                     let n1 = Int($0.replacingOccurrences(of: "S", with: "")) ?? 0
@@ -651,7 +613,7 @@ struct Haptics {
                     return n1 < n2
                 })
                 self.passanteTunnelHealthMessage = "Criticità su \(sorted.joined(separator: ", "))"
-                self.passanteTunnelHealthColor = "#e30613" // Red
+                self.passanteTunnelHealthColor = "#e30613"
             } else if !delayedLines.isEmpty {
                 let sorted = delayedLines.sorted(by: {
                     let n1 = Int($0.replacingOccurrences(of: "S", with: "")) ?? 0
@@ -659,10 +621,10 @@ struct Haptics {
                     return n1 < n2
                 })
                 self.passanteTunnelHealthMessage = "Rallentamenti su \(sorted.joined(separator: ", "))"
-                self.passanteTunnelHealthColor = "#f39200" // Orange
+                self.passanteTunnelHealthColor = "#f39200"
             } else {
                 self.passanteTunnelHealthMessage = "Circolazione Regolare"
-                self.passanteTunnelHealthColor = "#009640" // Green
+                self.passanteTunnelHealthColor = "#009640"
             }
         }
     }
@@ -708,7 +670,6 @@ struct Haptics {
                d.contains("busto") || d.contains("casale")
     }
 
-    // ── Ramo OVEST: via Bovisa (S1, S2, S12, S13) ──────────────────────
     var passanteTrainsViaBovisa: [Train] {
         passanteTrains.filter { train in
             let cat = train.category.uppercased()
@@ -720,7 +681,6 @@ struct Haptics {
         }
     }
     
-    // ── Ramo OVEST: via Rho / Certosa (S5, S6) ──────────────────────────
     var passanteTrainsViaRho: [Train] {
         passanteTrains.filter { train in
             let cat = train.category.uppercased()
@@ -732,7 +692,6 @@ struct Haptics {
         }
     }
     
-    // ── Ramo EST: via Forlanini (S5, S6) ────────────────────────────────
     var passanteTrainsViaForlanini: [Train] {
         passanteTrains.filter { train in
             let cat = train.category.uppercased()
@@ -744,7 +703,6 @@ struct Haptics {
         }
     }
     
-    // ── Ramo EST: via Rogoredo (S1, S2, S12, S13) ───────────────────────
     var passanteTrainsViaRogoredo: [Train] {
         passanteTrains.filter { train in
             let cat = train.category.uppercased()
@@ -756,7 +714,6 @@ struct Haptics {
         }
     }
     
-    /// Restituisce lo snodo/ramo del passante verso cui è diretto il treno
     func getPassanteBranch(for train: Train) -> String? {
         let cat = train.category.uppercased()
         let dest = train.destination
@@ -769,7 +726,6 @@ struct Haptics {
         return nil
     }
     
-    /// Verifica se una stazione appartiene al tronco centrale del passante ferroviario
     func isCentralPassanteStation(_ stationName: String) -> Bool {
         let name = stationName.lowercased()
         let centralStations = [
@@ -779,19 +735,15 @@ struct Haptics {
         return centralStations.contains { name.contains($0) }
     }
     
-    /// Verifica se una stazione supporta la logica direzionale metro-style del passante
     func isPassanteDirectionalStation(_ stationName: String) -> Bool {
         if !useSpecialPassanteView { return false }
         
         let name = stationName.lowercased()
         
-        // Se è esattamente la stazione di superficie generale, escludi la vista direzionale
         if name == "milano porta garibaldi" {
             return false
         }
         
-        // La vista direzionale è supportata SOLO dalle 6 stazioni del tunnel sotterraneo puro.
-        // Stazioni come Villapizzone, Forlanini, Certosa e Rho Fiera hanno binari di superficie per linee S esterne o Regionali.
         let passanteStations = [
             "lancetti",
             "garibaldi sotterranea", "garibaldi passante",
@@ -800,7 +752,6 @@ struct Haptics {
         return passanteStations.contains { name.contains($0) }
     }
     
-    /// Restituisce la macro-direzione del passante per un treno ("Ovest" o "Est")
     func getPassanteDirection(for train: Train) -> String? {
         guard let branch = getPassanteBranch(for: train) else { return nil }
         if branch == "Bovisa" || branch == "Rho" {
@@ -811,7 +762,6 @@ struct Haptics {
         return nil
     }
     
-    /// Risolve fisicamente il binario di partenza in base alla stazione e alla direzione del treno
     func resolvedPlatform(for stationName: String, train: Train) -> String {
         let name = stationName.lowercased()
         let direction = getPassanteDirection(for: train) ?? "Est"
@@ -864,20 +814,16 @@ struct Haptics {
     }
 
     
-    // Mantenuti per retrocompatibilità con eventuale codice residuo
     var passanteTrainsWestbound: [Train] { passanteTrainsViaBovisa + passanteTrainsViaRho }
     var passanteTrainsEastbound: [Train] { passanteTrainsViaForlanini + passanteTrainsViaRogoredo }
 
     
-    /// Linee che passano per il tunnel sotterraneo centrale
     static let tunnelLineIDs: Set<String> = ["S1", "S2", "S3", "S4", "S5", "S6", "S12", "S13"]
     
-    /// True se almeno una delle linee selezionate dall'utente usa il tunnel
     var userUsesTunnel: Bool {
         selectedSuburbanLines.contains { TrainManager.tunnelLineIDs.contains($0) }
     }
     
-    /// Stazioni uniche rilevanti per le linee selezionate dall'utente
     var passanteStationsForUser: [Station] {
         let selectedLines = SuburbanData.shared.allLines.filter { selectedSuburbanLines.contains($0.id) }
         let source = selectedLines.isEmpty ? SuburbanData.shared.allLines : selectedLines
@@ -928,7 +874,6 @@ struct Haptics {
         }
     }
     
-    // Algoritmo di pianificazione delle coincidenze suburbane
     private func findSuburbanRouteDetails(origin: String, destination: String) async -> SmartRouteDetails? {
         let allStations = SuburbanData.shared.allLines.flatMap { $0.stations }
         guard let origStation = allStations.first(where: { $0.name.lowercased() == origin.lowercased() }),
@@ -946,16 +891,13 @@ struct Haptics {
         let directLines = origLines.filter { ol in destLines.contains { dl in dl.id == ol.id } }
         
         if !directLines.isEmpty {
-            // Diretto!
             let scraped = await fetchTrainsForStation(station: origStation)
             let directTrains = scraped.filter { t in
-                // Il treno appartiene a una delle linee dirette
                 let cat = t.category.uppercased()
                 return directLines.contains { $0.id == cat || t.number.hasPrefix($0.id) }
             }
             return SmartRouteDetails(isDirect: true, exchangeStation: nil, originStation: origStation, destinationStation: destStation, originTrains: Array(directTrains.prefix(3)), exchangeTrains: [])
         } else {
-            // Con cambio nel tunnel centralizzato (o in un nodo comune)
             let tunnelStations = [
                 "Lancetti", "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria"
             ]
@@ -983,19 +925,16 @@ struct Haptics {
             
             guard let exchange = bestExchange else { return nil }
             
-            // Eseguiamo due fetch paralleli veloci
             async let origFetch = fetchTrainsForStation(station: origStation)
             async let exchangeFetch = fetchTrainsForStation(station: exchange)
             
             let (origTrains, exTrains) = await (origFetch, exchangeFetch)
             
-            // Filtra treni di origine diretti verso la stazione di scambio
             let toExchangeTrains = origTrains.filter { t in
                 let cat = t.category.uppercased()
                 return origLines.contains { $0.id == cat }
             }
             
-            // Filtra treni dalla stazione di scambio diretti a destinazione
             let toDestTrains = exTrains.filter { t in
                 let cat = t.category.uppercased()
                 return destLines.contains { $0.id == cat }
@@ -1235,7 +1174,6 @@ struct Haptics {
                     category = (firstTrain["trainCategory"] as? String) ?? (firstTrain["acronym"] as? String) ?? "Treno"
                     num = (firstTrain["name"] as? String) ?? (firstTrain["description"] as? String) ?? ""
                     
-                    // If there are multiple trains, denote changes
                     if trains.count > 1 {
                         num += " (+\(trains.count - 1) cambi)"
                     }
@@ -1302,7 +1240,6 @@ struct Haptics {
         self.searchRFIStationResults = self.allRFIStations.filter { $0.name.lowercased().contains(lowerQuery) }
     }
     
-    // --- OFF-MAIN-THREAD OPTIMIZATIONS ---
     
     nonisolated private func performVTFetch(for vtID: String, isDepartures: Bool, dateStr: String) async -> [Train] {
         let endpoint = isDepartures ? "partenze" : "arrivi"
@@ -1626,7 +1563,6 @@ struct Haptics {
             self.isStopsLoading = false
         }
         
-        // Update Live Activity if any
         if result.errorMessage == nil {
             let globalDelay = result.status.statusMessage.contains("Soppresso") ? 0 : (result.stops.last?.delay ?? 0)
             let delayStr = globalDelay > 0 ? "+\(globalDelay)'" : "In orario"
@@ -1680,7 +1616,6 @@ struct Haptics {
     }
 }
 
-// MARK: - StoreKit 2 Tip Jar Manager
 
 enum PurchaseState: Equatable {
     case idle
@@ -1702,7 +1637,6 @@ class TipManager: ObservableObject {
     private var transactionListener: Task<Void, Error>?
     
     init() {
-        // Ascolta le transazioni completate in background
         transactionListener = Task.detached {
             for await result in StoreKit.Transaction.updates {
                 do {
@@ -1771,8 +1705,6 @@ class TipManager: ObservableObject {
     }
     
     private func deliver(_ transaction: StoreKit.Transaction) async {
-        // Trattandosi di mance consumabili pure, non abbiamo bisogno di sbloccare
-        // funzionalità permanenti o persistere stati in locale. Ringraziamo semplicemente l'utente!
     }
     
     func resetState() {

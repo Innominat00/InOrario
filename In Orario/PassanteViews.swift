@@ -78,44 +78,34 @@ struct PassanteTunnelThermometerView: View {
     }
 
     
-    // Stazioni ordinate geograficamente da Ovest a Est per calcolo superamento
     let stations = [
-        // S5 West (Varese)
         "Varese", "Gazzada-Schianno-Morazzone", "Gazzada-Schianno", "Castronno", 
         "Albizzate-Solbiate Arno", "Albizzate-Solbiate A.", "Cavaria-Oggiona-Jerago", 
         "Cavaria-Oggiona-J.", "Gallarate", "Busto Arsizio", "Legnano", "Canegrate", 
         "Parabiago", "Vanzago-Pogliano",
         
-        // S6 West (Novara)
         "Novara", "Trecate", "Magenta", "Corbetta-S.Stefano Ticino", "Vittuone-Arluno", "Pregnana Milanese", "Rho",
         
-        // S1 West (Saronno)
         "Saronno", "Caronno Pertusella", "Cesate", "Garbagnate Milanese", 
         "Garbagnate Parco delle Groane", "Garbagnate Parco Groane", "Bollate Nord", 
         "Bollate Centro", "Novate Milanese", "Milano Quarto Oggiaro",
         
-        // S2 West (Mariano Comense)
         "Mariano Comense", "Cabiate", "Meda", "Seveso", "Cesano Maderno", 
         "Bovisio Masciago-Mombello", "Varedo", "Palazzolo Milanese", "Paderno Dugnano", 
         "Cormano-Cusano Milanino", "Cusano Milanino", "Milano Bruzzano",
         
-        // Core Tunnel
         "Rho Fiera", "Certosa", "Villapizzone", "Milano Bovisa", "Lancetti", 
         "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria",
         
-        // S5/S6 East (Treviglio)
         "Forlanini", "Segrate", "Pioltello-Limito", "Melzo", "Pozzuolo Martesana", 
         "Trecella", "Cassano d'Adda", "Treviglio",
         
-        // S1/S2/S12 East (Lodi/Melegnano)
         "Milano Rogoredo", "San Donato Milanese", "Borgolombardo", "San Giuliano Milanese", 
         "Melegnano", "Tavazzano", "Lodi",
         
-        // S13 East (Pavia)
         "Locate Triulzi", "Pieve Emanuele", "Villamaggiore", "Certosa di Pavia", "Pavia"
     ]
     
-    // Set di stazioni per smistamento preciso
     let s1Stations: Set<String> = ["Saronno", "Caronno Pertusella", "Cesate", "Garbagnate Milanese", "Garbagnate Parco delle Groane", "Garbagnate Parco Groane", "Bollate Nord", "Bollate Centro", "Novate Milanese", "Milano Quarto Oggiaro", "Milano Bovisa", "Lancetti", "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria", "Milano Rogoredo", "San Donato Milanese", "Borgolombardo", "San Giuliano Milanese", "Melegnano", "Tavazzano", "Lodi"]
     let s2Stations: Set<String> = ["Mariano Comense", "Cabiate", "Meda", "Seveso", "Cesano Maderno", "Bovisio Masciago-Mombello", "Varedo", "Palazzolo Milanese", "Paderno Dugnano", "Cormano-Cusano Milanino", "Milano Bruzzano", "Milano Bovisa", "Lancetti", "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria", "Milano Rogoredo"]
     let s5Stations: Set<String> = ["Varese", "Gazzada-Schianno-Morazzone", "Gazzada-Schianno", "Castronno", "Albizzate-Solbiate Arno", "Albizzate-Solbiate A.", "Cavaria-Oggiona-Jerago", "Cavaria-Oggiona-J.", "Gallarate", "Busto Arsizio", "Legnano", "Canegrate", "Parabiago", "Vanzago-Pogliano", "Rho", "Rho Fiera", "Certosa", "Villapizzone", "Lancetti", "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria", "Forlanini", "Segrate", "Pioltello-Limito", "Melzo", "Pozzuolo Martesana", "Trecella", "Cassano d'Adda", "Treviglio"]
@@ -123,7 +113,6 @@ struct PassanteTunnelThermometerView: View {
     let s12Stations: Set<String> = ["Cormano-Cusano Milanino", "Milano Bruzzano", "Milano Bovisa", "Lancetti", "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria", "Milano Rogoredo", "San Donato Milanese", "Borgolombardo", "San Giuliano Milanese", "Melegnano"]
     let s13Stations: Set<String> = ["Milano Bovisa", "Lancetti", "P. Garibaldi Passante", "Repubblica", "Porta Venezia", "Dateo", "Porta Vittoria", "Milano Rogoredo", "Locate Triulzi", "Pieve Emanuele", "Villamaggiore", "Certosa di Pavia", "Pavia"]
 
-    // Associa ciascun treno alla fermata in cui è stimato essere, smistandolo sui rami corretti
     func getEstimatedStationName(for train: Train) -> String? {
         guard let status = manager.passanteLiveStatuses[train.number] else {
             return nil
@@ -135,9 +124,6 @@ struct PassanteTunnelThermometerView: View {
         let last = status.lastStation.lowercased()
         let category = train.category.uppercased()
         
-        // Smistamento per rami corretti:
-        // Asse Certosa: S5, S6 (Villapizzone, Certosa, Rho Fiera)
-        // Asse Bovisa: S1, S2, S12, S13 (Milano Bovisa)
         let isCertosaAxis = ["S5", "S6"].contains(category)
         let isBovisaAxis = ["S1", "S2", "S12", "S13"].contains(category)
         
@@ -154,7 +140,6 @@ struct PassanteTunnelThermometerView: View {
         
         guard let candidate = matchedStation else { return nil }
         
-        // Controllo di smistamento scientifico per ramo e linea
         if candidate == "Milano Bovisa" && isCertosaAxis { return nil }
         if (candidate == "Certosa" || candidate == "Villapizzone") && isBovisaAxis { return nil }
         
@@ -169,7 +154,6 @@ struct PassanteTunnelThermometerView: View {
     }
 
     
-    // Calcolo diretto basato sui treni della stazione specifica, senza offset
     func directCountdown(for train: Train) -> String? {
         let isCancelled = train.delay.lowercased().contains("soppresso") || train.delay.lowercased().contains("cancellato")
         if isCancelled { return nil }
@@ -213,7 +197,6 @@ struct PassanteTunnelThermometerView: View {
     }
     
     var body: some View {
-        // Stazione di riferimento per il conto alla rovescia (quella attiva nel tabellone inferiore)
         let refStationName = manager.selectedPassanteStation.name
         let cleanRefName: String = {
             let lower = refStationName.lowercased()
@@ -236,7 +219,6 @@ struct PassanteTunnelThermometerView: View {
         
         let isCongested = trackColor == .red
         
-        // Filtro dinamico delle stazioni rilevanti per l'utente in base alle linee S preferite nelle impostazioni
         let activeStationsList: [String] = {
             let activeLines = manager.selectedSuburbanLines.filter { ["S1", "S2", "S5", "S6", "S12", "S13"].contains($0) }
             let onlyCertosa = !activeLines.isEmpty && activeLines.allSatisfy { ["S5", "S6"].contains($0) }
@@ -315,7 +297,6 @@ struct PassanteTunnelThermometerView: View {
                     "Milano Rogoredo"
                 ]
             } else {
-                // Misto (es. S1 + S6) o Nessun filtro: SOLO il tronco centrale sotterraneo comune!
                 return [
                     "Lancetti",
                     "P. Garibaldi Passante",
@@ -327,7 +308,6 @@ struct PassanteTunnelThermometerView: View {
             }
         }()
         
-        // Helper per identificare la lista di linee da mostrare (escludendo non-tunnel come S9/S19)
         let linesToProcess: [String] = {
             let activeLines = manager.selectedSuburbanLines.filter { ["S1", "S2", "S5", "S6", "S12", "S13"].contains($0) }
             if activeLines.isEmpty {
@@ -375,7 +355,6 @@ struct PassanteTunnelThermometerView: View {
         }()
         
         VStack(alignment: .leading, spacing: 16) {
-            // Intestazione con info dinamica sul prossimo treno (Dashboard Compatta)
             HStack(alignment: .top, spacing: 12) {
                 Circle()
                     .fill(color)
@@ -411,7 +390,6 @@ struct PassanteTunnelThermometerView: View {
                     .cornerRadius(8)
             }
             
-            // Allerta Waze del Passante se congestionato
             if isCongested {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -432,7 +410,6 @@ struct PassanteTunnelThermometerView: View {
                 )
             }
             
-            // Termometro verticale dinamico
             VStack(spacing: 0) {
                 ForEach(activeStationsList, id: \.self) { stationName in
                     let isSelected = (stationName == cleanRefName)
@@ -446,7 +423,6 @@ struct PassanteTunnelThermometerView: View {
                     }
                     
                     HStack(alignment: .center, spacing: 12) {
-                        // 1. Linea del tracciato + nodo della fermata
                         VStack(spacing: 0) {
                             if stationName != activeStationsList.first {
                                 Rectangle()
@@ -492,7 +468,6 @@ struct PassanteTunnelThermometerView: View {
                         }
                         .frame(width: 24)
                         
-                        // 2. Nome della stazione
                         HStack(spacing: 6) {
                             if isSelected {
                                 Text("📍")
@@ -506,7 +481,6 @@ struct PassanteTunnelThermometerView: View {
                         
                         Spacer()
                         
-                        // 3. Treni in questa stazione
                         if !trainsAtStation.isEmpty {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 6) {
@@ -597,7 +571,6 @@ struct SuburbanLineBadge: View {
 }
 
 fileprivate let passanteOuterStationLookup: [String: (rfiID: String?, vtID: String?)] = [
-    // S6 (Novara - Pioltello)
     "Novara": ("1917", "S01017"),
     "Trecate": ("2909", "S01019"),
     "Magenta": ("1618", "S01021"),
@@ -608,7 +581,6 @@ fileprivate let passanteOuterStationLookup: [String: (rfiID: String?, vtID: Stri
     "Segrate": ("3012", "S01065"),
     "Pioltello-Limito": ("3011", "S01066"),
     
-    // S5 (Varese - Treviglio)
     "Varese": ("2994", "S01205"),
     "Gazzada-Schianno-Morazzone": ("1413", "S01207"),
     "Castronno": ("1029", "S01208"),
@@ -626,7 +598,6 @@ fileprivate let passanteOuterStationLookup: [String: (rfiID: String?, vtID: Stri
     "Cassano d'Adda": ("3016", "S01070"),
     "Treviglio": ("1732", "S01071"),
     
-    // S1 (Saronno - Lodi)
     "Saronno": (nil, "S01150"),
     "Caronno Pertusella": (nil, "S01151"),
     "Cesate": (nil, "S01152"),
@@ -643,7 +614,6 @@ fileprivate let passanteOuterStationLookup: [String: (rfiID: String?, vtID: Stri
     "Tavazzano": ("1831", "S01825"),
     "Lodi": ("1830", "S01826"),
     
-    // S2 (Mariano Comense - Rogoredo)
     "Mariano Comense": (nil, "S01100"),
     "Cabiate": (nil, "S01101"),
     "Meda": (nil, "S01102"),
@@ -656,14 +626,12 @@ fileprivate let passanteOuterStationLookup: [String: (rfiID: String?, vtID: Stri
     "Cormano-Cusano Milanino": (nil, "S01109"),
     "Milano Bruzzano": (nil, "S01110"),
     
-    // S13 (Bovisa - Pavia)
     "Locate Triulzi": ("1837", "S01831"),
     "Pieve Emanuele": ("3381", "S01832"),
     "Villamaggiore": ("1838", "S01833"),
     "Certosa di Pavia": ("1839", "S01834"),
     "Pavia": ("1840", "S01835"),
     
-    // S12 (Cormano - Melegnano)
     "Melegnano": ("1833", "S01824")
 ]
 
@@ -672,7 +640,6 @@ fileprivate func stationForName(_ name: String, manager: TrainManager) -> Statio
     if let ids = passanteOuterStationLookup[cleanName] {
         return Station(name: cleanName, rfiID: ids.rfiID, vtID: ids.vtID, lat: nil, lon: nil)
     }
-    // Special names in the Passante core tunnel
     if cleanName.contains("Garibaldi") {
         return Station(name: cleanName, rfiID: "1714", vtID: "S01647", lat: nil, lon: nil)
     }
@@ -698,11 +665,9 @@ fileprivate func stationForName(_ name: String, manager: TrainManager) -> Statio
         return Station(name: cleanName, rfiID: "1720", vtID: "S01820", lat: nil, lon: nil)
     }
 
-    // Cerca corrispondenza esatta
     if let rfi = manager.allRFIStations.first(where: { $0.name.lowercased() == cleanName.lowercased() }) {
         return Station(name: rfi.name, rfiID: rfi.rfiID, vtID: rfi.vtID, lat: nil, lon: nil)
     }
-    // Cerca corrispondenza parziale (es. "Repubblica" -> "Milano Repubblica")
     if let rfi = manager.allRFIStations.first(where: { $0.name.lowercased().contains(cleanName.lowercased()) }) {
         return Station(name: rfi.name, rfiID: rfi.rfiID, vtID: rfi.vtID, lat: nil, lon: nil)
     }
@@ -714,7 +679,6 @@ struct PassanteDepartureBoardView: View {
     @EnvironmentObject var locationManager: LocationManager
     @AppStorage("showOuterSuburbanStations") var showOuterSuburbanStations = false
     
-    // Stazioni del selettore: stazioni filtrate in base all'asse per evitare disordine
     var relevantStations: [Station] {
         let allStations = manager.passanteStationsForUser
         
@@ -722,7 +686,6 @@ struct PassanteDepartureBoardView: View {
         let onlyCertosa = !activeLines.isEmpty && activeLines.allSatisfy { ["S5", "S6"].contains($0) }
         let onlyBovisa = !activeLines.isEmpty && activeLines.allSatisfy { ["S1", "S2", "S12", "S13"].contains($0) }
         
-        // Costruiamo i set delle stazioni locali per asse/linea per il filtraggio delle esterne
         let stationsGeographicOrder = [
             "Varese", "Gazzada-Schianno-Morazzone", "Gazzada-Schianno", "Castronno", 
             "Albizzate-Solbiate Arno", "Albizzate-Solbiate A.", "Cavaria-Oggiona-Jerago", 
@@ -823,7 +786,6 @@ struct PassanteDepartureBoardView: View {
     var body: some View {
         VStack(spacing: 12) {
             
-            // --- Selettore stazione (solo stazioni delle linee dell'utente) ---
             VStack(alignment: .leading, spacing: 8) {
                 Text("Tabellone — seleziona stazione")
                     .font(.system(size: 10, weight: .bold))
@@ -873,7 +835,6 @@ struct PassanteDepartureBoardView: View {
             
             Divider()
             
-            // --- Partenze: lista pulita per destinazione ---
             let allTrains = manager.passanteTrains
             if manager.isLoadingPassanteBoard && allTrains.isEmpty {
                 HStack {
@@ -904,7 +865,6 @@ struct PassanteDepartureBoardView: View {
                 
                 if onlyCertosa {
                     VStack(spacing: 12) {
-                        // Box 1: Ovest (Rho)
                         PassanteBranchView(
                             label: "← Direzione Ovest (Rho / Varese)",
                             color: .orange,
@@ -914,7 +874,6 @@ struct PassanteDepartureBoardView: View {
                             },
                             isLarge: true
                         )
-                        // Box 2: Est (Forlanini)
                         PassanteBranchView(
                             label: "Direzione Est (Forlanini / Treviglio) →",
                             color: .orange,
@@ -927,7 +886,6 @@ struct PassanteDepartureBoardView: View {
                     }
                 } else if onlyBovisa {
                     VStack(spacing: 12) {
-                        // Box 1: Ovest (Bovisa)
                         PassanteBranchView(
                             label: "← Direzione Ovest (Bovisa / Saronno)",
                             color: .red,
@@ -937,7 +895,6 @@ struct PassanteDepartureBoardView: View {
                             },
                             isLarge: true
                         )
-                        // Box 2: Est (Rogoredo)
                         PassanteBranchView(
                             label: "Direzione Est (Rogoredo / Pavia / Lodi) →",
                             color: .red,
@@ -949,10 +906,8 @@ struct PassanteDepartureBoardView: View {
                         )
                     }
                 } else {
-                    // Griglia 2x2 originale
                     VStack(spacing: 10) {
                         HStack(alignment: .top, spacing: 10) {
-                            // ← BOVISA
                             PassanteBranchView(
                                 label: "← Bovisa",
                                 color: .red,
@@ -961,7 +916,6 @@ struct PassanteDepartureBoardView: View {
                                     return manager.selectedSuburbanLines.isEmpty || manager.selectedSuburbanLines.contains(cat) || cat == "S" || cat == "REG" || cat == "RV"
                                 }
                             )
-                            // → FORLANINI
                             PassanteBranchView(
                                 label: "Forlanini →",
                                 color: .orange,
@@ -972,7 +926,6 @@ struct PassanteDepartureBoardView: View {
                             )
                         }
                         HStack(alignment: .top, spacing: 10) {
-                            // ← RHO
                             PassanteBranchView(
                                 label: "← Rho",
                                 color: .orange,
@@ -981,7 +934,6 @@ struct PassanteDepartureBoardView: View {
                                     return manager.selectedSuburbanLines.isEmpty || manager.selectedSuburbanLines.contains(cat) || cat == "S" || cat == "REG" || cat == "RV"
                                 }
                             )
-                            // → ROGOREDO
                             PassanteBranchView(
                                 label: "Rogoredo →",
                                 color: .red,
@@ -992,7 +944,6 @@ struct PassanteDepartureBoardView: View {
                             )
                         }
                         
-                        // Treni non classificati (se presenti)
                         let filteredBovisa = manager.passanteTrainsViaBovisa.filter { t in manager.selectedSuburbanLines.isEmpty || manager.selectedSuburbanLines.contains(t.category.uppercased()) }
                         let filteredRho = manager.passanteTrainsViaRho.filter { t in manager.selectedSuburbanLines.isEmpty || manager.selectedSuburbanLines.contains(t.category.uppercased()) }
                         let filteredForlanini = manager.passanteTrainsViaForlanini.filter { t in manager.selectedSuburbanLines.isEmpty || manager.selectedSuburbanLines.contains(t.category.uppercased()) }
@@ -1038,7 +989,6 @@ struct PassanteBranchView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: isLarge ? 10 : 6) {
-            // Etichetta ramo
             HStack(spacing: 4) {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(color)
@@ -1071,7 +1021,6 @@ struct PassanteBranchView: View {
     }
 }
 
-/// Riga treno ultra-compatta per i box del ramo
 
 
 struct SmartConnectorRouteView: View {
@@ -1112,7 +1061,6 @@ struct SmartConnectorRouteView: View {
                 .padding(.vertical, 15)
             } else if let details = details {
                 if details.isDirect {
-                    // Tratta Diretta
                     VStack(alignment: .leading, spacing: 8) {
                         Text("COLLEGAMENTO DIRETTO")
                             .font(.system(size: 8, weight: .black))
@@ -1146,7 +1094,6 @@ struct SmartConnectorRouteView: View {
                         }
                     }
                 } else {
-                    // Tratta con Cambio
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
                             Text("CONNESSO CON CAMBIO")
@@ -1165,7 +1112,6 @@ struct SmartConnectorRouteView: View {
                         }
                         .padding(.bottom, 2)
                         
-                        // Primo Step: Origine ➔ Cambio
                         if let firstTrain = details.originTrains.first {
                             HStack(spacing: 8) {
                                 Circle()
@@ -1195,7 +1141,6 @@ struct SmartConnectorRouteView: View {
                                 .italic()
                         }
                         
-                        // Linea verticale per il cambio
                         HStack(spacing: 12) {
                             Rectangle()
                                 .fill(Color.orange.opacity(0.4))
@@ -1215,7 +1160,6 @@ struct SmartConnectorRouteView: View {
                             Spacer()
                         }
                         
-                        // Secondo Step: Cambio ➔ Destinazione
                         if let secondTrain = details.exchangeTrains.first {
                             HStack(spacing: 8) {
                                 Circle()
@@ -1412,13 +1356,11 @@ struct PassanteTunnelDetailView: View {
     
     @State private var currentTab = 0
     
-    // Timer di aggiornamento automatico ogni 15 secondi (attivo solo quando la vista è aperta)
     let timer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                // Segmented Picker nativo
                 Picker("Sezione", selection: $currentTab) {
                     Text("Mappa Linea").tag(0)
                     Text("Treni in Arrivo").tag(1)
@@ -1427,7 +1369,6 @@ struct PassanteTunnelDetailView: View {
                 .padding(.horizontal)
                 .padding(.top, 14)
                 
-                // Mostra stazioni esterne toggle (only shown if Certosa or Bovisa axes are selected, not mixed)
                 let activeLines = manager.selectedSuburbanLines.filter { ["S1", "S2", "S5", "S6", "S12", "S13"].contains($0) }
                 let isMixed = !activeLines.isEmpty && 
                               !(activeLines.allSatisfy { ["S5", "S6"].contains($0) } || 
@@ -1487,7 +1428,6 @@ struct PassanteTunnelDetailView: View {
                 }
             }
             .onReceive(timer) { _ in
-                // Esegue il refresh in background dei treni nel tunnel e dei loro stati live
                 Task {
                     await manager.fetchPassanteLive()
                 }

@@ -31,18 +31,15 @@ struct SharedFormatters {
     nonisolated static func formatDestination(_ name: String) -> String {
         var dest = name
         
-        // Se è Milano Centrale, lasciala stare
         if dest == "Milano Centrale" {
             return dest
         }
         
-        // Sostituzioni per Porta Garibaldi
         dest = dest.replacingOccurrences(of: "Milano Porta Garibaldi Passante", with: "Milano P. Garibaldi")
         dest = dest.replacingOccurrences(of: "Milano Porta Garibaldi", with: "Milano P. Garibaldi")
         dest = dest.replacingOccurrences(of: "Porta Garibaldi Passante", with: "Milano P. Garibaldi")
         dest = dest.replacingOccurrences(of: "Porta Garibaldi", with: "Milano P. Garibaldi")
         
-        // Sostituzioni per Porta Venezia
         if dest == "Milano Porta Venezia" || dest == "Porta Venezia" || dest == "Venezia" {
             dest = "P. Venezia"
         } else {
@@ -50,7 +47,6 @@ struct SharedFormatters {
             dest = dest.replacingOccurrences(of: "Porta Venezia", with: "P. Venezia")
         }
         
-        // Sostituzioni per Porta Vittoria
         if dest == "Milano Porta Vittoria" || dest == "Porta Vittoria" || dest == "Vittoria" {
             dest = "P. Vittoria"
         } else {
@@ -58,16 +54,12 @@ struct SharedFormatters {
             dest = dest.replacingOccurrences(of: "Porta Vittoria", with: "P. Vittoria")
         }
         
-        // Sostituzioni per Repubblica
         dest = dest.replacingOccurrences(of: "Milano Repubblica", with: "Repubblica")
         
-        // Sostituzioni per Dateo
         dest = dest.replacingOccurrences(of: "Milano Dateo", with: "Dateo")
         
-        // Sostituzioni per Lancetti
         dest = dest.replacingOccurrences(of: "Milano Lancetti", with: "Lancetti")
         
-        // Sostituzioni generiche per abbreviare "Porta" se compare in altre stazioni (es. Porta Romana -> P. Romana)
         if dest.contains("Porta ") && !dest.contains("Milano P. ") && !dest.contains("P. ") {
             dest = dest.replacingOccurrences(of: "Porta ", with: "P. ")
         }
@@ -264,7 +256,6 @@ struct Train: Identifiable, Sendable {
             }
         }
         
-        // Ulteriore pulizia per prefissi generici "Milano " rimasti
         if clean.hasPrefix("Milano ") {
             clean = String(clean.dropFirst(7))
         } else if clean.hasPrefix("Milano") {
@@ -377,7 +368,6 @@ struct SuburbanRoute: Codable, Identifiable, Equatable {
     let destinationName: String
 }
 
-// Estensione per leggere l'esadecimale
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -385,11 +375,11 @@ extension Color {
         Scanner(string: hex).scanHexInt64(&int)
         let a, r, g, b: UInt64
         switch hex.count {
-        case 3: // RGB (12-bit)
+        case 3:
             (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
+        case 6:
             (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
+        case 8:
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
             (a, r, g, b) = (1, 1, 1, 0)
@@ -410,7 +400,6 @@ struct SuburbanData {
     let allLines: [SuburbanLine]
     
     private init() {
-        // --- Stazioni ---
         let bovisa = Station(name: "Milano Bovisa", rfiID: nil, vtID: "S01201", lat: 45.5025, lon: 9.1592)
         let certosa = Station(name: "Certosa", rfiID: "1708", vtID: "S01640", lat: 45.5085, lon: 9.1272)
         let villapizzone = Station(name: "Villapizzone", rfiID: "3099", vtID: "S01639", lat: 45.4998, lon: 9.1465)
@@ -438,7 +427,6 @@ struct SuburbanData {
         let garibaldiSup = Station(name: "Milano P. Garibaldi", rfiID: "1715", vtID: "S01058", lat: 45.4844, lon: 9.1887)
         let rhoFiera = Station(name: "Rho Fiera", rfiID: "3098", vtID: "S01026", lat: 45.5215, lon: 9.0883)
         
-        // S6 e S5 Ovest / Est
         let novara = Station(name: "Novara", rfiID: "1917", vtID: "S01017", lat: 45.4524, lon: 8.6253)
         let trecate = Station(name: "Trecate", rfiID: "2909", vtID: "S01019", lat: 45.4374, lon: 8.7428)
         let magenta = Station(name: "Magenta", rfiID: "1618", vtID: "S01021", lat: 45.4641, lon: 8.8845)
@@ -466,7 +454,6 @@ struct SuburbanData {
         let cassano = Station(name: "Cassano d'Adda", rfiID: "3016", vtID: "S01070", lat: 45.5242, lon: 9.5165)
         let treviglio = Station(name: "Treviglio", rfiID: "1732", vtID: "S01071", lat: 45.5201, lon: 9.5932)
         
-        // S1 Ovest / Est
         let caronno = Station(name: "Caronno Pertusella", rfiID: nil, vtID: "S01151", lat: 45.5983, lon: 9.0432)
         let cesate = Station(name: "Cesate", rfiID: nil, vtID: "S01152", lat: 45.5812, lon: 9.0621)
         let garbagnateM = Station(name: "Garbagnate Milanese", rfiID: nil, vtID: "S01153", lat: 45.5684, lon: 9.0763)
@@ -482,7 +469,6 @@ struct SuburbanData {
         let tavazzano = Station(name: "Tavazzano", rfiID: "1831", vtID: "S01825", lat: 45.3262, lon: 9.3783)
         let lodi = Station(name: "Lodi", rfiID: "1830", vtID: "S01826", lat: 45.2796, lon: 9.4795)
         
-        // S2 Ovest
         let mariano = Station(name: "Mariano Comense", rfiID: nil, vtID: "S01100", lat: 45.6983, lon: 9.1832)
         let cabiate = Station(name: "Cabiate", rfiID: nil, vtID: "S01101", lat: 45.6812, lon: 9.1721)
         let meda = Station(name: "Meda", rfiID: nil, vtID: "S01102", lat: 45.6684, lon: 9.1563)
@@ -495,14 +481,12 @@ struct SuburbanData {
         let cormano = Station(name: "Cormano-Cusano Milanino", rfiID: nil, vtID: "S01109", lat: 45.5451, lon: 9.1783)
         let bruzzano = Station(name: "Milano Bruzzano", rfiID: nil, vtID: "S01110", lat: 45.5262, lon: 9.1762)
         
-        // S13 Est
         let locate = Station(name: "Locate Triulzi", rfiID: "1837", vtID: "S01831", lat: 45.3583, lon: 9.2182)
         let pieve = Station(name: "Pieve Emanuele", rfiID: "3381", vtID: "S01832", lat: 45.3421, lon: 9.2062)
         let villamaggiore = Station(name: "Villamaggiore", rfiID: "1838", vtID: "S01833", lat: 45.3212, lon: 9.2021)
         let certosaPavia = Station(name: "Certosa di Pavia", rfiID: "1839", vtID: "S01834", lat: 45.2562, lon: 9.1583)
         let pavia = Station(name: "Pavia", rfiID: "1840", vtID: "S01835", lat: 45.1868, lon: 9.1625)
         
-        // --- Flussi ---
         let tunnelOvestBovisa = [bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo]
         let tunnelOvestCertosa = [rhoFiera, certosa, villapizzone, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, forlanini]
         let ramoCadorna = [bovisa, domodossola, cadorna]
@@ -516,7 +500,6 @@ struct SuburbanData {
         let lineS12Stations = [cormano, bruzzano, bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo, sanDonato, borgolombardo, sanGiuliano, melegnano]
         let lineS13Stations = [bovisa, lancetti, garibaldiPassante, repubblica, venezia, dateo, vittoria, rogoredo, locate, pieve, villamaggiore, certosaPavia, pavia]
         
-        // --- Linee ---
         self.allLines = [
             SuburbanLine(id: "S1", name: "S1 Saronno - Lodi", hexColor: "#e30613", stations: lineS1Stations),
             SuburbanLine(id: "S2", name: "S2 Mariano - Rogoredo", hexColor: "#009640", stations: lineS2Stations),
@@ -575,7 +558,7 @@ struct SavedTripSegment: Codable, Equatable {
 }
 
 struct SavedTrip: Codable, Identifiable, Equatable {
-    let id: String // Can be a composite of origin, dest, departureTime
+    let id: String
     let origin: String
     let destination: String
     let departureTime: String

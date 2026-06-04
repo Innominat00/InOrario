@@ -41,7 +41,6 @@ struct Provider: TimelineProvider {
             }
             
             let entry = SimpleEntry(date: Date(), trains: widgetData)
-            // Aggiorna il widget ogni 5 minuti
             let nextUpdate = Calendar.current.date(byAdding: .minute, value: 5, to: Date())!
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
