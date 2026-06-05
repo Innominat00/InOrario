@@ -1,4 +1,4 @@
-## 🚄 In Orario (iOS)
+## 🚄 In Orario
 
 In Orario nasce da una cosa molto semplice: essere pendolari e non sapere mai davvero cosa sta succedendo in stazione.
 
@@ -17,12 +17,6 @@ Questa app prova a rendere tutto un po’ più chiaro e veloce.
 - Widget e Live Activities per avere le informazioni subito, senza aprire l’app
 - Salvataggio delle stazioni preferite
 
----
-
-## 📱 Perché esiste
-
-Perché le informazioni sui treni spesso sono frammentate, lente o poco affidabili.
-
 In Orario prova a mettere tutto in un’unica schermata, il più velocemente possibile.
 
 ---
@@ -32,6 +26,10 @@ In Orario prova a mettere tutto in un’unica schermata, il più velocemente pos
 Se cerchi la versione Android dell’app:
 
 👉 https://github.com/ToreroClub/InOrario-Android
+
+## 🍎 Versione iOS
+
+👉 Puoi partecipare al beta testing tramite [TestFlight](https://testflight.apple.com/join/CfHeUYvr)
 
 ---
 
