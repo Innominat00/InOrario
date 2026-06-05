@@ -72,7 +72,12 @@ struct TrainStopsView: View {
                     HStack(spacing: 16) {
                         let isActive = manager.activeLiveActivities.contains(train.number)
                         Button {
-                            startLiveActivity(train: train)
+                            if true /* UserDefaults.standard.bool(forKey: "tip.colazione") */ {
+                                startLiveActivity(train: train)
+                            } else {
+                                Haptics.notify(.error)
+                                manager.notificationLimitError = "Le Live Activities sono una funzionalità premium sbloccabile con Colazione Pendolare."
+                            }
                         } label: {
                             Image(systemName: isActive ? "livephoto.slash" : "livephoto.play")
                                 .foregroundColor(isActive ? .red : .green)
@@ -139,8 +144,21 @@ struct TrainStopsView: View {
         do {
             let activity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: contentState, staleDate: nil)
+                content: .init(state: contentState, staleDate: nil),
+                pushType: .token
             )
+            // Observe the push token and register it with the server for remote updates
+            Task {
+                for await tokenData in activity.pushTokenUpdates {
+                    if let apnsToken = manager.apnsToken, !apnsToken.isEmpty {
+                        manager.registerLiveActivityToken(
+                            pushToken: tokenData,
+                            trainNumber: train.number,
+                            deviceToken: apnsToken
+                        )
+                    }
+                }
+            }
             DispatchQueue.main.async { manager.syncLiveActivities() }
             Haptics.notify(.success)
             print("Dynamic Island attivata! ID: \(activity.id)")

@@ -55,6 +55,7 @@ struct ContentView: View {
     
     @State private var deepLinkTrain: Train? = nil
     @State private var selectedFavoriteTrain: Train? = nil
+    @State private var isPulsing = false
     
     var appTitle: String {
         if hasUrgentNews {
@@ -71,34 +72,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                
-                if !manager.activeLiveActivities.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(Array(manager.activeLiveActivities), id: \.self) { trainNum in
-                                HStack(spacing: 6) {
-                                    Circle()
-                                        .fill(Color.red)
-                                        .frame(width: 8, height: 8)
-                                    Text("Treno \(trainNum)")
-                                        .font(.caption)
-                                        .bold()
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.red.opacity(0.15))
-                                .foregroundColor(.red)
-                                .cornerRadius(16)
-                            }
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 12)
-                    }
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                
-                
-                
                 List {
                     ForEach(manager.sectionOrder, id: \.self) { section in
                         switch section {
@@ -283,13 +256,45 @@ struct ContentView: View {
             .navigationTitle(appTitle)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        Haptics.play(.medium)
-                        showProfile = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                            .font(.title2)
-                            .foregroundColor(.orange)
+                    HStack(spacing: 10) {
+                        Button {
+                            Haptics.play(.medium)
+                            showProfile = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                                .font(.title2)
+                                .foregroundColor(.orange)
+                        }
+                        
+                        if !manager.activeLiveActivities.isEmpty {
+                            ForEach(Array(manager.activeLiveActivities), id: \.self) { trainNum in
+                                Button {
+                                    Haptics.play(.medium)
+                                    let dummy = Train(category: "Treno", number: trainNum, destination: "Caricamento...", time: "--:--", delay: "In orario", platform: "--")
+                                    selectedFavoriteTrain = dummy
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Circle()
+                                            .fill(Color.red)
+                                            .frame(width: 6, height: 6)
+                                            .opacity(isPulsing ? 0.3 : 1.0)
+                                            .onAppear {
+                                                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                                                    isPulsing = true
+                                                }
+                                            }
+                                        Text("Treno \(trainNum)")
+                                            .font(.system(size: 10, weight: .bold))
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.red.opacity(0.12))
+                                    .foregroundColor(.red)
+                                    .cornerRadius(10)
+                                }
+                                .transition(.scale.combined(with: .opacity))
+                            }
+                        }
                     }
                 }
                 
@@ -377,6 +382,16 @@ struct ContentView: View {
             
         }
         .environmentObject(metroCache)
+        .alert("Limite Raggiunto", isPresented: Binding(
+            get: { manager.notificationLimitError != nil },
+            set: { if !$0 { manager.notificationLimitError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let msg = manager.notificationLimitError {
+                Text(msg)
+            }
+        }
         
         .sheet(item: $selectedFavoriteTrain) { t in
             NavigationStack {

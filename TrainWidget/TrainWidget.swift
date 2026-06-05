@@ -127,61 +127,83 @@ struct TrainWidgetEntryView : View {
     var entry: Provider.Entry
     @Environment(\.widgetFamily) var family
 
+    private var isUnlocked: Bool {
+        let defaults = UserDefaults(suiteName: "group.carlo.InOrario")
+        return (defaults?.bool(forKey: "tip.cappuccino") ?? false) || (defaults?.bool(forKey: "tip.colazione") ?? false)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: "star.fill")
-                    .foregroundColor(.yellow)
-                Text("Treni Preferiti")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-            }
-            .padding(.bottom, 4)
-
-            if entry.trains.isEmpty {
-                Text("Nessun treno preferito.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            if !isUnlocked {
+                VStack(spacing: 8) {
+                    Spacer()
+                    Image(systemName: "lock.fill")
+                        .foregroundColor(.orange)
+                        .font(.title2)
+                    Text("Widget Bloccato")
+                        .font(.headline)
+                    Text("Sblocca Cappuccino o Colazione Pendolare nelle impostazioni.")
+                        .font(.system(size: 10))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
             } else {
-                let displayCount = family == .systemSmall ? 2 : 4
-                ForEach(entry.trains.prefix(displayCount)) { train in
-                    Link(destination: URL(string: "inorario://\(train.number)")!) {
-                        HStack {
-                            Image(systemName: "train.side.front.car")
-                                .foregroundColor(.blue)
-                                .font(.subheadline)
-                            VStack(alignment: .leading) {
-                                Text("Treno \(train.number)")
+                HStack {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                    Text("Treni Preferiti")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                }
+                .padding(.bottom, 4)
+
+                if entry.trains.isEmpty {
+                    Text("Nessun treno preferito.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    let displayCount = family == .systemSmall ? 2 : 4
+                    ForEach(entry.trains.prefix(displayCount)) { train in
+                        Link(destination: URL(string: "inorario://\(train.number)")!) {
+                            HStack {
+                                Image(systemName: "train.side.front.car")
+                                    .foregroundColor(.blue)
                                     .font(.subheadline)
-                                    .bold()
-                                    .foregroundColor(.primary)
-                                Text(train.description)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                            }
-                            Spacer()
-                            
-                            VStack(alignment: .trailing) {
-                                HStack(spacing: 4) {
-                                    Circle()
-                                        .fill(train.delayColor)
-                                        .frame(width: 8, height: 8)
-                                    Text(train.delayText)
-                                        .font(.caption)
+                                VStack(alignment: .leading) {
+                                    Text("Treno \(train.number)")
+                                        .font(.subheadline)
                                         .bold()
-                                        .foregroundColor(train.delayColor)
+                                        .foregroundColor(.primary)
+                                    Text(train.description)
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                                
+                                VStack(alignment: .trailing) {
+                                    HStack(spacing: 4) {
+                                        Circle()
+                                            .fill(train.delayColor)
+                                            .frame(width: 8, height: 8)
+                                        Text(train.delayText)
+                                            .font(.caption)
+                                            .bold()
+                                            .foregroundColor(train.delayColor)
+                                    }
                                 }
                             }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(8)
                         }
-                        .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(8)
                     }
                 }
+                Spacer()
             }
-            Spacer()
         }
     }
 }

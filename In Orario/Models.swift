@@ -10,9 +10,10 @@ struct NewsItem: Codable, Identifiable {
     let title: String
     let content: String
     let isUrgent: Bool
+    let category: String?
     
     enum CodingKeys: String, CodingKey {
-        case title, content, isUrgent
+        case title, content, isUrgent, category
     }
 }
 
@@ -162,6 +163,13 @@ struct SavedTrain: Codable, Identifiable, Equatable {
     var id: String { number }
     let number: String
     let description: String
+    
+    var notifyDelay: Bool? = false
+    var notifyStationPass: Bool? = false
+    var stationPassName: String? = nil
+    var notifyDeparture: Bool? = false
+    var departureTime: String? = nil
+    var arrivalTime: String? = nil
 }
 
 struct VTSearchStation: Codable, Identifiable {

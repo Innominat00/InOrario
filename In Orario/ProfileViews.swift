@@ -1,32 +1,63 @@
 import SwiftUI
 import StoreKit
 
+enum NewsCategory: String, CaseIterable, Identifiable {
+    case sciopero = "Scioperi"
+    case lavoro = "Info Lavori"
+    case realtime = "Info Mobilità"
+    
+    var id: String { self.rawValue }
+    
+    var filterKey: String {
+        switch self {
+        case .sciopero: return "sciopero"
+        case .lavoro: return "lavoro"
+        case .realtime: return "realtime"
+        }
+    }
+}
+
 struct NewsCenterView: View {
     let news: [NewsItem]
     @Environment(\.dismiss) var dismiss
+    @State private var selectedCategory: NewsCategory = .sciopero
+    
+    var filteredNews: [NewsItem] {
+        news.filter { ($0.category ?? "sciopero") == selectedCategory.filterKey }
+    }
     
     var body: some View {
         NavigationStack {
-            List {
-                if news.isEmpty {
-                    VStack(spacing: 15) {
-                        Spacer()
-                        Image(systemName: "tray.full").font(.system(size: 50)).foregroundColor(.secondary)
-                        Text("Nessuna notizia disponibile").font(.headline).foregroundColor(.secondary)
-                        Spacer()
-                    }.frame(maxWidth: .infinity).listRowBackground(Color.clear)
-                } else {
-                    ForEach(news) { item in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text(item.title).font(.headline)
-                                Spacer()
-                                if item.isUrgent {
-                                    Text("URGENTE").font(.system(size: 10, weight: .bold)).padding(.horizontal, 6).padding(.vertical, 2).background(.red).foregroundColor(.white).cornerRadius(4)
+            VStack(spacing: 0) {
+                Picker("Categoria", selection: $selectedCategory) {
+                    ForEach(NewsCategory.allCases) { category in
+                        Text(category.rawValue).tag(category)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding()
+                
+                List {
+                    if filteredNews.isEmpty {
+                        VStack(spacing: 15) {
+                            Spacer()
+                            Image(systemName: "tray.full").font(.system(size: 50)).foregroundColor(.secondary)
+                            Text("Nessuna notizia in \(selectedCategory.rawValue)").font(.headline).foregroundColor(.secondary)
+                            Spacer()
+                        }.frame(maxWidth: .infinity).listRowBackground(Color.clear)
+                    } else {
+                        ForEach(filteredNews) { item in
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text(item.title).font(.headline)
+                                    Spacer()
+                                    if item.isUrgent {
+                                        Text("URGENTE").font(.system(size: 10, weight: .bold)).padding(.horizontal, 6).padding(.vertical, 2).background(.red).foregroundColor(.white).cornerRadius(4)
+                                    }
                                 }
-                            }
-                            Text(item.content).font(.subheadline).foregroundColor(.secondary)
-                        }.padding(.vertical, 8)
+                                Text(item.content).font(.subheadline).foregroundColor(.secondary)
+                            }.padding(.vertical, 8)
+                        }
                     }
                 }
             }
@@ -139,6 +170,7 @@ struct ProfileView: View {
     @EnvironmentObject var manager: TrainManager
     @Environment(\.dismiss) var dismiss
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    @AppStorage("developerMockPurchases") private var developerMockPurchases = false
     @StateObject private var tipManager = TipManager()
     @State private var showFeedbackSheet = false
     
@@ -152,6 +184,14 @@ struct ProfileView: View {
                     }
                     NavigationLink(destination: CustomizePassanteView()) {
                         Label("Personalizza Passante", systemImage: "tram.fill")
+                            .font(.headline)
+                    }
+                }
+                
+                Section(header: Text("Notifiche")) {
+                    NavigationLink(destination: NotificationsSettingsView()) {
+                        Label("Notifiche e Scioperi", systemImage: "bell.fill")
+                            .foregroundColor(.orange)
                             .font(.headline)
                     }
                 }
@@ -243,6 +283,8 @@ struct ProfileView: View {
                             .font(.headline)
                     }
                 }
+                
+
             }
             .navigationTitle("Impostazioni")
             .navigationBarTitleDisplayMode(.inline)
@@ -633,6 +675,221 @@ struct CustomizePassanteView: View {
             }
         }
         .navigationTitle("Personalizza Passante")
+    }
+}
+
+struct NotificationsSettingsView: View {
+    @EnvironmentObject var manager: TrainManager
+    
+    var body: some View {
+        List {
+            Section(header: Text("Stato Treno")) {
+                Toggle(isOn: Binding(
+                    get: { manager.remoteNotificationsEnabled },
+                    set: { newValue in
+                        Haptics.play(.medium)
+                        if newValue {
+                            manager.requestNotificationPermission()
+                        } else {
+                            manager.disableNotifications()
+                        }
+                    }
+                )) {
+                    Label("Abilita Notifiche", systemImage: "bell.fill")
+                        .foregroundColor(.orange)
+                        .font(.headline)
+                }
+            }
+            
+            if manager.remoteNotificationsEnabled {
+                Section(header: Text("Area Geografica Scioperi")) {
+                    HStack {
+                        Label("Filtro Scioperi", systemImage: "globe")
+                            .foregroundColor(.red)
+                            .font(.headline)
+                        Spacer()
+                        Picker("", selection: $manager.strikeRegion) {
+                            Text("Nazionale / Tutte").tag("Tutte")
+                            ForEach(["Abruzzo", "Basilicata", "Calabria", "Campania", "Emilia-Romagna", "Friuli Venezia Giulia", "Lazio", "Liguria", "Lombardia", "Marche", "Molise", "Piemonte", "Puglia", "Sardegna", "Sicilia", "Toscana", "Trentino-Alto Adige", "Umbria", "Valle d'Aosta", "Veneto"], id: \.self) { region in
+                                Text(region).tag(region)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                    Text("Riceverai avvisi e notifiche sugli scioperi nazionali e per la regione selezionata.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                Section(header: Text("Notifiche Treni Preferiti"), footer: Text("Le notifiche automatiche ti avvisano se il treno è in ritardo o quando passa dalla stazione scelta.")) {
+                    if manager.favoriteTrains.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "star.slash.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.secondary)
+                                .padding(.top, 8)
+                            Text("Nessun Treno Preferito")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            Text("Aggiungi i tuoi treni abituali ai preferiti per abilitare e configurare le notifiche personalizzate.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                                .padding(.bottom, 8)
+                        }
+                        .frame(maxWidth: .infinity)
+                    } else {
+                        ForEach(manager.favoriteTrains) { train in
+                            if let index = manager.favoriteTrains.firstIndex(where: { $0.id == train.id }) {
+                                TrainNotificationConfigRow(train: Binding(
+                                    get: { manager.favoriteTrains[index] },
+                                    set: { manager.favoriteTrains[index] = $0 }
+                                ))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Notifiche")
+    }
+}
+
+struct TrainNotificationConfigRow: View {
+    @Binding var train: SavedTrain
+    @EnvironmentObject var manager: TrainManager
+    @State private var stops: [Stop] = []
+    @State private var isLoadingStops = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "train.side.front.car")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Treno \(train.number)")
+                            .font(.headline)
+                        Text(train.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { train.notifyDelay ?? false },
+                    set: { newValue in
+                        train.notifyDelay = newValue
+                        if !newValue {
+                            train.notifyDeparture = false
+                            train.notifyStationPass = false
+                        }
+                        saveAndSync()
+                    }
+                ))
+                .labelsHidden()
+            }
+            
+            if train.notifyDelay ?? false {
+                VStack(alignment: .leading, spacing: 10) {
+                    Divider()
+                        .padding(.vertical, 2)
+                    
+                    Toggle(isOn: Binding(
+                        get: { train.notifyDeparture ?? false },
+                        set: { newValue in
+                            train.notifyDeparture = newValue
+                            saveAndSync()
+                        }
+                    )) {
+                        Text("Notifica alla partenza da origine")
+                            .font(.subheadline)
+                    }
+                    .padding(.leading, 8)
+                    
+                    Toggle(isOn: Binding(
+                        get: { train.notifyStationPass ?? false },
+                        set: { newValue in
+                            train.notifyStationPass = newValue
+                            saveAndSync()
+                            if newValue {
+                                loadStops()
+                            }
+                        }
+                    )) {
+                        Text("Notifica al passaggio in stazione")
+                            .font(.subheadline)
+                    }
+                    .padding(.leading, 8)
+                    
+                    if train.notifyStationPass ?? false {
+                        HStack {
+                            Text("Seleziona stazione di transito:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            
+                            if isLoadingStops {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else if !stops.isEmpty {
+                                Picker("", selection: Binding(
+                                    get: { train.stationPassName ?? stops.first?.stationName ?? "" },
+                                    set: { newValue in
+                                        train.stationPassName = newValue
+                                        saveAndSync()
+                                    }
+                                )) {
+                                    ForEach(stops) { stop in
+                                        Text(stop.stationName).tag(stop.stationName)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                            } else {
+                                Button("Riprova caricamento") {
+                                    loadStops()
+                                }
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                            }
+                        }
+                        .padding(.leading, 24)
+                        .onAppear {
+                            loadStops()
+                        }
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(.vertical, 6)
+    }
+    
+    private func saveAndSync() {
+        manager.saveFavorites()
+        manager.syncRemoteNotifications()
+    }
+    
+    private func loadStops() {
+        if let cached = manager.favoriteTrainsStops[train.number], !cached.isEmpty {
+            self.stops = cached
+            return
+        }
+        
+        isLoadingStops = true
+        Task {
+            let result = await manager.fetchLiveStops(for: train.number)
+            await MainActor.run {
+                if !result.stops.isEmpty {
+                    manager.favoriteTrainsStops[train.number] = result.stops
+                    self.stops = result.stops
+                }
+                isLoadingStops = false
+            }
+        }
     }
 }
 
