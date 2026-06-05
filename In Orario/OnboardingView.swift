@@ -22,12 +22,6 @@ struct OnboardingView: View {
             iconColor: .blue
         ),
         OnboardingPage(
-            title: "Salute del Passante",
-            description: "Per i pendolari di Milano c'è una sezione dedicata che monitora lo stato di salute del Passante Ferroviario. Vedi in tempo reale lo stato della linea e i minuti di attesa per ogni direzione.",
-            iconName: "waveform.path.ecg",
-            iconColor: .green
-        ),
-        OnboardingPage(
             title: "Stazione di Casa / Lavoro",
             description: "Cerca e salva la tua stazione preferita. Quando attivi il filtro Casa 🏠, l'app mostrerà solo i treni diretti qui.",
             iconName: "house.fill",
@@ -40,20 +34,26 @@ struct OnboardingView: View {
             iconColor: .yellow
         ),
         OnboardingPage(
-            title: "Live Activities & Tunnel",
-            description: "Segui lo stato del tuo treno in tempo reale sulla Schermata di Blocco e sulla Dynamic Island con le Live Activities. Esplora lo stato del Passante con la mappa termometrica live!",
-            iconName: "iphone.circle.fill",
+            title: "Passante & Tunnel",
+            description: "Monitora lo stato del Passante di Milano e del relativo Tunnel sotterraneo in un'unica schermata. Seleziona qui sotto le tue linee suburbane preferite da tenere sott'occhio:",
+            iconName: "tram.fill",
+            iconColor: .green
+        ),
+        OnboardingPage(
+            title: "Funzioni Smart & Widget",
+            description: "Tutto ciò di cui hai bisogno per viaggiare senza stress:",
+            iconName: "sparkles",
             iconColor: .purple
         ),
         OnboardingPage(
-            title: "Metro & Smart Routes",
-            description: "La prima app che integra tutti gli orari della metropolitana di Milano. Inoltre, il motore di ricerca troverà i percorsi più intelligenti combinando treni e mezzi urbani!",
-            iconName: "tram.fill",
+            title: "Orari della Metropolitana",
+            description: "Esplora gli orari integrati della metropolitana di Milano direttamente dentro l'app, combinando i percorsi in modo intelligente.",
+            iconName: "tram",
             iconColor: .teal
         ),
         OnboardingPage(
             title: "Scioperi e GPS",
-            description: "Resta aggiornato su scioperi o disservizi con notizie ed elaborazioni intelligenti.\n\nConsenti l'accesso alla posizione per rilevare automaticamente le stazioni del Passante a te più vicine per una navigazione immediata!",
+            description: "Resta aggiornato su scioperi o disservizi con notizie ed ed elaborazioni intelligenti.\n\nConsenti l'accesso alla posizione per rilevare automaticamente le stazioni del Passante a te più vicine per una navigazione immediata!",
             iconName: "location.circle.fill",
             iconColor: .blue
         )
@@ -84,13 +84,13 @@ struct OnboardingView: View {
                             if index == 0 {
                                 OnboardingCardView(page: pages[index], isLastPage: false) {}
                             } else if index == 1 {
-                                OnboardingCardView(page: pages[index], isLastPage: false) {}
-                            } else if index == 2 {
                                 OnboardingHomeStationPickerView()
-                            } else if index == 3 {
+                            } else if index == 2 {
                                 OnboardingFavoriteRoutesView()
+                            } else if index == 3 {
+                                OnboardingPassanteLinePickerView(page: pages[index])
                             } else if index == 4 {
-                                OnboardingCardView(page: pages[index], isLastPage: false) {}
+                                OnboardingFeaturesView(page: pages[index])
                             } else if index == 5 {
                                 OnboardingCardView(page: pages[index], isLastPage: false) {}
                             } else if index == 6 {
@@ -207,80 +207,201 @@ struct OnboardingHomeStationPickerView: View {
     @State private var homeDestInput = ""
     @State private var hasSaved = false
     
+    // Per le stazioni preferite generiche
+    @State private var favStationName = ""
+    @State private var favStationID = ""
+    @State private var showFavSearch = false
+    
     var body: some View {
-        VStack(spacing: 15) {
-            Text("Stazione di Casa / Lavoro")
+        VStack(spacing: 12) {
+            Text("Stazione di Casa & Preferite")
                 .font(.system(.title, design: .rounded))
                 .bold()
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 20)
                 .padding(.top, 10)
             
-            Text("Salva la tua stazione preferita. Quando attivi il filtro Casa 🏠 sulla toolbar della Home, l'app mostrerà solo i treni diretti qui con calcolo orario in tempo reale.")
+            Text("Configura la stazione di casa per il filtro rapido 🏠 e aggiungi le stazioni che frequenti più spesso per averle sempre in primo piano.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 30)
             
-            Spacer()
-            
-            VStack(spacing: 20) {
-                let allStations = SuburbanData.shared.allLines.flatMap { $0.stations.map { $0.name.capitalized } } + manager.allRFIStations.map { $0.name.capitalized }
-                AutocompleteField(
-                    label: "Cerca e seleziona Stazione",
-                    placeholder: "Es. Magenta, Rho, Milano Centrale...",
-                    text: $homeDestInput,
-                    suggestions: Array(Set(allStations)).sorted()
-                )
-                .padding(.horizontal, 30)
-                
-                if !manager.homeDestinationStationName.isEmpty {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text("Stazione salvata: **\(manager.homeDestinationStationName)**")
-                            .font(.body)
+            ScrollView {
+                VStack(spacing: 20) {
+                    // SEZIONE CASA / LAVORO
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Stazione di Casa / Lavoro (Filtro 🏠)")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 30)
+                        
+                        let allStations = SuburbanData.shared.allLines.flatMap { $0.stations.map { $0.name.capitalized } } + manager.allRFIStations.map { $0.name.capitalized }
+                        AutocompleteField(
+                            label: "Seleziona Stazione di Casa",
+                            placeholder: "Es. Magenta, Rho, Milano Centrale...",
+                            text: $homeDestInput,
+                            suggestions: Array(Set(allStations)).sorted()
+                        )
+                        .padding(.horizontal, 30)
+                        
+                        if !manager.homeDestinationStationName.isEmpty {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("Stazione salvata: **\(manager.homeDestinationStationName)**")
+                                    .font(.caption)
+                            }
+                            .padding(.horizontal, 30)
+                            .padding(.top, 2)
+                        }
+                        
+                        HStack(spacing: 15) {
+                            Button(action: {
+                                Haptics.play(.medium)
+                                manager.homeDestinationStationName = homeDestInput
+                                manager.saveFavorites()
+                                hasSaved = true
+                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                            }) {
+                                Text(manager.homeDestinationStationName.isEmpty ? "Salva Stazione" : "Aggiorna")
+                                    .font(.subheadline.bold())
+                                    .padding(.vertical, 8)
+                                    .frame(maxWidth: .infinity)
+                                    .background(homeDestInput.isEmpty ? Color.gray : Color.orange)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+                            .disabled(homeDestInput.isEmpty)
+                            
+                            if !manager.homeDestinationStationName.isEmpty {
+                                Button(action: {
+                                    Haptics.play(.medium)
+                                    homeDestInput = ""
+                                    manager.homeDestinationStationName = ""
+                                    manager.saveFavorites()
+                                    hasSaved = false
+                                }) {
+                                    Text("Rimuovi")
+                                        .font(.subheadline.bold())
+                                        .padding(.vertical, 8)
+                                        .frame(maxWidth: .infinity)
+                                        .background(Color.red.opacity(0.1))
+                                        .foregroundColor(.red)
+                                        .cornerRadius(10)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 30)
                     }
-                    .padding(.top, 5)
-                }
-                
-                Button(action: {
-                    Haptics.play(.medium)
-                    manager.homeDestinationStationName = homeDestInput
-                    manager.saveFavorites()
-                    hasSaved = true
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }) {
-                    Text(manager.homeDestinationStationName.isEmpty ? "Salva Stazione" : "Aggiorna Stazione")
-                        .bold()
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(homeDestInput.isEmpty ? Color.gray : Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
-                .disabled(homeDestInput.isEmpty)
-                .padding(.horizontal, 30)
-                
-                if !manager.homeDestinationStationName.isEmpty {
-                    Button(action: {
-                        Haptics.play(.medium)
-                        homeDestInput = ""
-                        manager.homeDestinationStationName = ""
-                        manager.saveFavorites()
-                        hasSaved = false
-                    }) {
-                        Text("Rimuovi stazione salvata")
-                            .foregroundColor(.red)
-                            .font(.subheadline)
+                    
+                    Divider()
+                        .padding(.horizontal, 30)
+                    
+                    // SEZIONE STAZIONI PREFERITE GENERALI
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Le Mie Stazioni Preferite")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 30)
+                        
+                        Button(action: { showFavSearch = true }) {
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.secondary)
+                                Text(favStationName.isEmpty ? "Cerca e aggiungi stazione preferita..." : favStationName)
+                                    .foregroundColor(favStationName.isEmpty ? .secondary : .primary)
+                                Spacer()
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(.blue)
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 30)
+                        
+                        // Lista stazioni preferite già aggiunte
+                        VStack(spacing: 8) {
+                            if manager.myStations.isEmpty {
+                                Text("Nessuna stazione preferita aggiunta.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                                    .padding(.top, 5)
+                            } else {
+                                ForEach(manager.myStations, id: \.name) { station in
+                                    HStack {
+                                        Image(systemName: "building.2.crop.circle.fill")
+                                            .foregroundColor(.orange)
+                                        Text(station.name)
+                                            .font(.subheadline.bold())
+                                        Spacer()
+                                        Button(role: .destructive) {
+                                            Haptics.play(.medium)
+                                            if let vtID = station.vtID {
+                                                manager.removeMyStation(vtID: vtID)
+                                            }
+                                        } label: {
+                                            Image(systemName: "trash")
+                                                .foregroundColor(.red)
+                                        }
+                                    }
+                                    .padding(.horizontal, 15)
+                                    .padding(.vertical, 10)
+                                    .background(Color(.secondarySystemBackground).opacity(0.6))
+                                    .cornerRadius(10)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 30)
                     }
                 }
+                .padding(.bottom, 20)
             }
-            
-            Spacer()
         }
         .onAppear {
             homeDestInput = manager.homeDestinationStationName
+        }
+        .sheet(isPresented: $showFavSearch) {
+            StationSelectionSheet(selectedName: $favStationName, selectedID: $favStationID, title: "Aggiungi Preferita")
+        }
+        .onChange(of: favStationID) { oldValue, newValue in
+            if !newValue.isEmpty {
+                Haptics.play(.medium)
+                // Cerca se c'è un vtID corrispondente o se è sui dati suburban/rfi
+                let normalized = favStationName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                // Proviamo a recuperare un vtID
+                var foundVtID: String? = nil
+                
+                // Ricerca nei dati suburbani
+                for line in SuburbanData.shared.allLines {
+                    if let stat = line.stations.first(where: { $0.name.lowercased() == normalized }) {
+                        foundVtID = stat.vtID
+                        break
+                    }
+                }
+                
+                // Ricerca nelle stazioni RFI caricate
+                if foundVtID == nil {
+                    if let exactRFI = manager.allRFIStations.first(where: { $0.name.lowercased() == normalized }) {
+                        // Per RFI non abbiamo sempre vtID nativo ma myStations accetta vtID.
+                        // Usiamo una codifica fittizia o cerchiamo se c'è matching in rfiID
+                        foundVtID = exactRFI.rfiID
+                    }
+                }
+                
+                // Fallback con ID passato dalla ricerca trenitalia
+                let finalVtID = foundVtID ?? favStationID
+                
+                if !manager.isMyStation(vtID: finalVtID) {
+                    manager.addMyStation(name: favStationName, vtID: finalVtID)
+                }
+                
+                favStationName = ""
+                favStationID = ""
+            }
         }
     }
 }
@@ -415,6 +536,139 @@ struct OnboardingFavoriteRoutesView: View {
         }
         .sheet(isPresented: $showDestSearch) {
             StationSelectionSheet(selectedName: $destName, selectedID: $destID, title: "Arrivo")
+        }
+    }
+}
+
+struct OnboardingPassanteLinePickerView: View {
+    let page: OnboardingPage
+    @EnvironmentObject var manager: TrainManager
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(page.title)
+                .font(.system(.title, design: .rounded))
+                .bold()
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+            
+            Text(page.description)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 30)
+            
+            // Griglia compatta delle linee S (S1-S13)
+            let columns = [
+                GridItem(.adaptive(minimum: 70, maximum: 90), spacing: 10)
+            ]
+            
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(SuburbanData.shared.allLines) { line in
+                        let isSelected = manager.selectedSuburbanLines.contains(line.id)
+                        Button(action: {
+                            Haptics.play(.light)
+                            manager.toggleSuburbanLine(line.id)
+                        }) {
+                            Text(line.id)
+                                .font(.system(.headline, design: .rounded))
+                                .bold()
+                                .frame(width: 70, height: 44)
+                                .background(isSelected ? line.color : Color(.secondarySystemBackground))
+                                .foregroundColor(isSelected ? .white : .primary)
+                                .cornerRadius(10)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(line.color, lineWidth: isSelected ? 0 : 1.5)
+                                )
+                        }
+                    }
+                }
+                .padding(.horizontal, 30)
+                .padding(.vertical, 10)
+            }
+            .frame(maxHeight: 220)
+            
+            VStack(spacing: 8) {
+                Text("ℹ️ Nota sulle stazioni")
+                    .font(.footnote.bold())
+                    .foregroundColor(.secondary)
+                
+                Text("Nelle impostazioni dell'app potrai configurare le singole stazioni da mostrare per ciascuna linea e se includere le stazioni esterne alla tratta urbana.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 35)
+                    .lineSpacing(2)
+            }
+            .padding(.top, 5)
+            .padding(.bottom, 15)
+            
+            Spacer()
+        }
+    }
+}
+
+struct OnboardingFeaturesView: View {
+    let page: OnboardingPage
+    
+    var body: some View {
+        VStack(spacing: 15) {
+            Text(page.title)
+                .font(.system(.title, design: .rounded))
+                .bold()
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+            
+            Text(page.description)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 30)
+            
+            VStack(alignment: .leading, spacing: 20) {
+                FeatureRow(icon: "iphone.circle.fill", color: .purple, title: "Live Activities & Dynamic Island", desc: "Segui l'andamento del treno direttamente sulla Schermata di Blocco e nell'Isola Dinamica.")
+                
+                FeatureRow(icon: "bolt.fill", color: .yellow, title: "Smart Routes", desc: "Algoritmo intelligente per trovare le migliori coincidenze tra treni regionali e metropolitane.")
+                
+                FeatureRow(icon: "bookmark.fill", color: .blue, title: "Treni Salvati", desc: "Tieni d'occhio i tuoi treni frequenti direttamente dalla dashboard principale.")
+                
+                FeatureRow(icon: "square.grid.2x2.fill", color: .green, title: "Widget per la Schermata Home", desc: "Visualizza lo stato dei tuoi treni o del passante a colpo d'occhio senza aprire l'app.")
+            }
+            .padding(.horizontal, 30)
+            .padding(.top, 10)
+            
+            Spacer()
+        }
+    }
+}
+
+struct FeatureRow: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let desc: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 15) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundColor(color)
+                .frame(width: 40, height: 40)
+                .background(color.opacity(0.12))
+                .cornerRadius(10)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.bold())
+                Text(desc)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
         }
     }
 }

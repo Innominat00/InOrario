@@ -44,6 +44,7 @@ struct AutocompleteField: View {
     
     @State private var isDropdownOpen = false
     @State private var filteredSuggestions: [String] = []
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -57,6 +58,12 @@ struct AutocompleteField: View {
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(8)
                     .autocorrectionDisabled(true)
+                    .focused($isFocused)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        isFocused = false
+                        isDropdownOpen = false
+                    }
                     .onChange(of: text) { oldValue, newValue in
                         isDropdownOpen = true
                         updateSuggestions(newValue)
@@ -71,6 +78,7 @@ struct AutocompleteField: View {
                         text = ""
                         filteredSuggestions = []
                         isDropdownOpen = false
+                        isFocused = false
                         Haptics.play(.light)
                     }) {
                         Image(systemName: "xmark.circle.fill")
@@ -87,6 +95,7 @@ struct AutocompleteField: View {
                         Button(action: {
                             text = suggestion
                             isDropdownOpen = false
+                            isFocused = false
                             Haptics.play(.medium)
                         }) {
                             HStack {
@@ -132,4 +141,5 @@ struct AutocompleteField: View {
         }
     }
 }
+
 

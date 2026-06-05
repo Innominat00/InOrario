@@ -30,31 +30,33 @@ struct TrainStopsView: View {
                 .padding().background(Color(.secondarySystemBackground)).cornerRadius(12).padding()
                 
                 List(manager.selectedTrainStops) { stop in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(stop.stationName).font(.headline)
+                    NavigationLink(destination: SmartBoardView(station: stationFromStopName(stop.stationName, manager: manager))) {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(stop.stationName).font(.headline)
+                                
+                                if let act = stop.actualTime {
+                                    Text("Effettivo: \(act)")
+                                        .font(.caption)
+                                        .foregroundColor(stop.delay <= 2 ? .green : (stop.delay <= 6 ? .orange : .red))
+                                }
+                                else if let est = stop.estimatedTime {
+                                    Text("Previsto: \(est)")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                        .bold()
+                                }
+                            }
+                            Spacer()
                             
-                            if let act = stop.actualTime {
-                                Text("Effettivo: \(act)")
-                                    .font(.caption)
-                                    .foregroundColor(stop.delay <= 2 ? .green : (stop.delay <= 6 ? .orange : .red))
+                            if stop.actualTime == nil && stop.estimatedTime != nil {
+                                Text(stop.time)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .strikethrough()
+                            } else {
+                                Text(stop.time).font(.subheadline).foregroundColor(.secondary)
                             }
-                            else if let est = stop.estimatedTime {
-                                Text("Previsto: \(est)")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                    .bold()
-                            }
-                        }
-                        Spacer()
-                        
-                        if stop.actualTime == nil && stop.estimatedTime != nil {
-                            Text(stop.time)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .strikethrough()
-                        } else {
-                            Text(stop.time).font(.subheadline).foregroundColor(.secondary)
                         }
                     }
                     .listRowBackground(stop.stationName.lowercased().contains("magenta") ? Color.orange.opacity(0.1) : Color.clear)
@@ -147,4 +149,29 @@ struct TrainStopsView: View {
             Haptics.notify(.error)
         }
     }
+}
+
+/// Risolve il nome di una fermata (proveniente da dati Trenitalia/RFI) in una `Station` navigabile.
+/// Priorità:
+///   1. Match esatto su `allRFIStations.name`  → preferisce `rfiID` (Trenitalia)
+///   2. Match parziale su `allRFIStations.name` → idem
+///   3. Fallback su `passanteOuterStationLookup` (vtID ViaggiaTreno) per stazioni non coperte dal DB RFI
+private func stationFromStopName(_ name: String, manager: TrainManager) -> Station {
+    let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    // 1. Corrispondenza esatta (case-insensitive)
+    if let rfi = manager.allRFIStations.first(where: { $0.name.lowercased() == clean.lowercased() }) {
+        return Station(name: rfi.name, rfiID: rfi.rfiID, vtID: rfi.vtID, lat: nil, lon: nil)
+    }
+
+    // 2. Corrispondenza parziale (il nome della fermata contiene o è contenuto nel DB)
+    if let rfi = manager.allRFIStations.first(where: {
+        $0.name.lowercased().contains(clean.lowercased()) ||
+        clean.lowercased().contains($0.name.lowercased())
+    }) {
+        return Station(name: rfi.name, rfiID: rfi.rfiID, vtID: rfi.vtID, lat: nil, lon: nil)
+    }
+
+    // 3. Fallback: lookup del Passante (vtID ViaggiaTreno)
+    return stationForName(clean, manager: manager)
 }

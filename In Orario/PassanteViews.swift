@@ -635,7 +635,7 @@ fileprivate let passanteOuterStationLookup: [String: (rfiID: String?, vtID: Stri
     "Melegnano": ("1833", "S01824")
 ]
 
-fileprivate func stationForName(_ name: String, manager: TrainManager) -> Station {
+func stationForName(_ name: String, manager: TrainManager) -> Station {
     let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
     if let ids = passanteOuterStationLookup[cleanName] {
         return Station(name: cleanName, rfiID: ids.rfiID, vtID: ids.vtID, lat: nil, lon: nil)
